@@ -1,0 +1,561 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "学习计划系统 · 实验二接口",
+    "version": "1.0.0",
+    "description": "按现有 Controller、Entity、Result 与数据库字段核对。范围为实验二使用的登录及学习计划接口，不代表全部系统 API。"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地 Spring Boot 后端"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "已有账号登录",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。成功时建立 Session 并通过 JSESSIONID Cookie 维持登录。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/current": {
+      "get": {
+        "summary": "读取当前登录用户",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。未登录时 success=true 且 data=null。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "退出登录",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。使 Session 失效，data=null。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/plans": {
+      "get": {
+        "summary": "查询当前用户计划，按创建时间倒序",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "401": {
+            "description": "未登录，返回 Result，success=false、data=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建当前用户计划",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。id 被清空，userId 取自 Session。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "401": {
+            "description": "未登录，返回 Result，success=false、data=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plans/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "summary": "查询本人计划详情",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。不存在或不属于本人时 success=false。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "401": {
+            "description": "未登录，返回 Result，success=false、data=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        }
+      },
+      "put": {
+        "summary": "修改本人计划",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。前端发送完整可编辑字段；成功时 data=null。空值字段更新遵循现有 MyBatis-Plus 策略，不能保证清空旧值。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "401": {
+            "description": "未登录，返回 Result，success=false、data=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanInput"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除本人计划及关联任务、学习记录",
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。成功时 data=null；数据删除不可通过 Git 撤销。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON、日期或参数；不保证 Result 结构"
+          },
+          "401": {
+            "description": "未登录，返回 Result，success=false、data=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "JSESSIONID"
+      }
+    },
+    "schemas": {
+      "PlanInput": {
+        "type": "object",
+        "required": [
+          "planName"
+        ],
+        "properties": {
+          "planName": {
+            "type": "string",
+            "description": "非空名称。数据库最大 100 字符；后端当前仅检查非空。"
+          },
+          "goal": {
+            "type": "string",
+            "nullable": true,
+            "description": "数据库最大 255 字符"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true,
+            "description": "界面固定选项：未开始、进行中、已完成、已取消；现有后端未限定枚举。"
+          }
+        }
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "planName": {
+            "type": "string",
+            "description": "非空名称。数据库最大 100 字符；后端当前仅检查非空。"
+          },
+          "goal": {
+            "type": "string",
+            "nullable": true,
+            "description": "数据库最大 255 字符"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true,
+            "description": "界面固定选项：未开始、进行中、已完成、已取消；现有后端未限定枚举。"
+          },
+          "totalStudyMinutes": {
+            "type": "integer",
+            "nullable": true
+          },
+          "totalStudyRecordCount": {
+            "type": "integer",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true,
+            "description": "成功登录后服务将该值置空"
+          },
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Credentials": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "Result": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "description": "操作结果；失败及无内容操作为 null",
+            "nullable": true
+          }
+        }
+      },
+      "PlanResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Plan"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "PlanListResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Plan"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "UserResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}

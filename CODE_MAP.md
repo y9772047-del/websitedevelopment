@@ -239,3 +239,10 @@
 - 后端接口：`ImportantNodeKeywordRuleController`，路径 `/api/important-node-keyword-rules`，提供当前用户规则的增删改查。
 - 后端计算入口：`ImportantNodeController`，新增、编辑、批量导入和列表查询重要节点时都会按事件类型、距离当前日期、当前用户关键词规则计算 `importance`。
 - 前端入口：`src/main/resources/static/pages/app.html` 的“重要节点”页面和 `src/main/resources/static/js/important-nodes.js` 的关键词规则表单、列表渲染、批量导入解析。
+
+## 实验二：独立 Vue 前端
+
+- `frontend/index.html` → `frontend/src/main.js` → `App.vue`：登录与学习计划 CRUD。`api.js` 负责 Axios、Session 凭证及 Result 错误处理。
+- `frontend/vite.config.js`：独立构建入口；复用原 `static/css/base.css`，不依赖原静态 JS。
+- `WebConfig.apiCorsFilter`：API 跨域白名单，`APP_CORS_ALLOWED_ORIGINS` 可配置。
+- `docs/experiment-2/`：运行说明、OpenAPI 文档和验证记录。

@@ -141,3 +141,10 @@ When splitting frontend JS:
 5. Update this file and the affected `CODE_MAP.md` section.
 6. Run `node --check` on every changed JS file when Node is available.
 7. Verify the affected page in browser or with a focused runtime check when the change affects user interaction.
+
+## Experiment 2 independent Vue entry
+
+- `frontend/index.html` loads `src/main.js` as an ES module; Vite bundles and hashes assets.
+- `main.js` imports Vue, `App.vue`, and existing `static/css/base.css`.
+- `App.vue` imports `api.js`; `api.js` imports Axios. No window exports, inline handlers, or legacy JS dependencies.
+- The original static page script order and version query strings remain unchanged.
