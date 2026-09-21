@@ -1,0 +1,550 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学生学习计划管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/base.css?v=20260706-theme-shared">
+    <link rel="stylesheet" href="../css/app.css?v=20260706-theme-shared">
+</head>
+<body class="prototype-body">
+<nav class="navbar navbar-expand-lg app-navbar sticky-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" href="#">大学生学习计划管理系统</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <div class="navbar-nav ms-auto nav-actions">
+                <button class="nav-link active" data-page="dashboard">首页</button>
+                <button class="nav-link" data-page="plans">学习计划</button>
+                <button class="nav-link" data-page="tasks">学习任务</button>
+                <button class="nav-link" data-page="records">学习记录</button>
+                <button class="nav-link" data-page="calendar">学习日历</button>
+                <button class="nav-link" data-page="importantNodes">重要节点</button>
+                <button class="nav-link" data-page="feedback">意见反馈</button>
+                <button class="nav-link" data-page="themes">主题皮肤</button>
+                <button class="nav-link" id="logoutBtn">退出</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid app-shell">
+    <section id="dashboard" class="page-section">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Dashboard</span>
+                <h1 class="page-title">首页 / 仪表盘</h1>
+            </div>
+        </div>
+        <div class="row g-3 mb-4" id="dashboardMetrics"></div>
+        <div class="insight-grid mb-4">
+            <div class="dashboard-focus-card" id="dashboardFocusPanel"></div>
+            <div class="dashboard-focus-card dashboard-risk-card" id="dashboardRiskPanel"></div>
+            <div class="dashboard-focus-card" id="dashboardProgressPanel"></div>
+            <div class="dashboard-focus-card" id="dashboardImprovementPanel"></div>
+        </div>
+        <div class="content-card mb-4">
+            <div class="card-title-row">
+                <div><h2>学习提醒</h2><p class="muted-text mb-0">今日待办、即将截止和逾期任务。</p></div>
+            </div>
+            <div id="taskReminderList" class="stack-list"></div>
+        </div>
+        <div class="dashboard-chart-grid mb-4">
+            <div class="content-card chart-card category-heatmap" id="categoryHeatmapPanel">
+                <div class="card-title-row">
+                    <div>
+                        <h2>分类学习热力图</h2>
+                        <p class="muted-text mb-0" id="categoryHeatmapSummary">按学习记录展示最近学习活跃度。</p>
+                    </div>
+                    <div class="category-heatmap-filters" id="categoryHeatmapFilters"></div>
+                </div>
+                <div class="heatmap-board">
+                    <div class="heatmap-week-labels" id="categoryHeatmapWeekLabels">
+                        <span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>周日</span>
+                    </div>
+                    <div class="heatmap-scroll">
+                        <div class="heatmap-grid" id="categoryHeatmapGrid"></div>
+                    </div>
+                </div>
+                <div class="heatmap-legend">
+                    <span>少</span>
+                    <i class="heatmap-swatch heatmap-level-0"></i>
+                    <i class="heatmap-swatch heatmap-level-1"></i>
+                    <i class="heatmap-swatch heatmap-level-2"></i>
+                    <i class="heatmap-swatch heatmap-level-3"></i>
+                    <i class="heatmap-swatch heatmap-level-4"></i>
+                    <i class="heatmap-swatch heatmap-level-5"></i>
+                    <span>多</span>
+                </div>
+            </div>
+            <div class="content-card chart-card plan-investment-card" id="planInvestmentPanel">
+                <div class="card-title-row">
+                    <div>
+                        <h2>学习计划投入分布</h2>
+                        <p class="muted-text mb-0">按学习记录统计不同学习计划在当前时间范围内的累计学习时长占比。</p>
+                    </div>
+                    <div class="plan-investment-range-buttons" id="planInvestmentRangeButtons"></div>
+                </div>
+                <div class="plan-investment-body">
+                    <div class="plan-investment-donut-wrap">
+                        <div class="plan-investment-donut" id="planInvestmentDonut" title="暂无学习投入数据"></div>
+                        <div class="plan-investment-center" id="planInvestmentCenter">
+                            <strong>0</strong>
+                            <span>分钟</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="plan-investment-summary" id="planInvestmentSummary"></div>
+                        <div class="plan-investment-legend" id="planInvestmentLegend"></div>
+                    </div>
+                </div>
+                <p class="plan-investment-empty d-none" id="planInvestmentEmpty">暂无学习投入数据，新增学习记录后将自动生成计划投入分布。</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <h2>最近任务</h2>
+                    <div id="recentTaskList" class="stack-list"></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <h2>最近学习记录</h2>
+                    <div id="recentRecordList" class="stack-list"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="plans" class="page-section d-none">
+        <div class="page-heading">
+            <div><span class="soft-label">Plans</span><h1 class="page-title">学习计划管理</h1></div>
+        </div>
+        <div class="content-card mb-4">
+            <h2>计划表单</h2>
+            <form id="planForm" class="row g-3">
+                <input type="hidden" name="id">
+                <div class="col-md-4"><label class="form-label">计划名称</label><input class="form-control" name="planName" required></div>
+                <div class="col-md-4"><label class="form-label">学习目标</label><input class="form-control" name="goal"></div>
+                <div class="col-md-2"><label class="form-label">开始日期</label><input class="form-control" name="startDate" type="date"></div>
+                <div class="col-md-2"><label class="form-label">结束日期</label><input class="form-control" name="endDate" type="date"></div>
+                <div class="col-md-3"><label class="form-label">状态</label><select class="form-select" name="status"><option>未开始</option><option selected>进行中</option><option>已完成</option><option>已取消</option></select></div>
+                <div class="col-md-9"><label class="form-label">计划描述</label><input class="form-control" name="description"></div>
+                <div class="col-12"><button class="btn btn-primary">保存计划</button> <button class="btn btn-outline-primary" type="button" onclick="resetForm('planForm')">清空</button></div>
+            </form>
+        </div>
+        <div class="content-card">
+            <h2>计划列表</h2>
+            <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>计划名称</th><th>目标</th><th>周期</th><th>状态</th><th>操作</th></tr></thead><tbody id="planTable"></tbody></table></div>
+        </div>
+    </section>
+
+    <section id="planEdit" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Plan Edit</span>
+                <h1 class="page-title">编辑学习计划</h1>
+            </div>
+            <button class="btn btn-outline-primary" type="button" onclick="showPage('plans')">返回计划列表</button>
+        </div>
+        <div class="content-card">
+            <h2>计划编辑表单</h2>
+            <form id="planEditForm" class="row g-3">
+                <input type="hidden" name="id">
+                <div class="col-md-4"><label class="form-label">计划名称</label><input class="form-control" name="planName" required></div>
+                <div class="col-md-4"><label class="form-label">学习目标</label><input class="form-control" name="goal"></div>
+                <div class="col-md-2"><label class="form-label">开始时间</label><input class="form-control" name="startDate" type="date"></div>
+                <div class="col-md-2"><label class="form-label">结束时间</label><input class="form-control" name="endDate" type="date"></div>
+                <div class="col-md-3"><label class="form-label">状态</label><select class="form-select" name="status"><option>未完成</option><option>已完成</option><option>进行中</option></select></div>
+                <div class="col-md-9"><label class="form-label">计划描述</label><input class="form-control" name="description"></div>
+                <div class="col-12">
+                    <button class="btn btn-primary">保存修改</button>
+                    <button class="btn btn-outline-primary" type="button" onclick="showPage('plans')">取消</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section id="planDetail" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Plan Detail</span>
+                <h1 class="page-title" id="planDetailTitle">计划详情</h1>
+                <p class="muted-text mt-2 mb-0" id="planDetailMeta"></p>
+            </div>
+            <button class="btn btn-outline-primary" type="button" onclick="showPage('plans')">返回计划列表</button>
+        </div>
+        <div class="content-card">
+            <div id="planDetailTasks">
+                <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>任务名称</th><th>分类</th><th>优先级</th><th>截止日期</th><th>状态</th></tr></thead><tbody id="planDetailTaskTable"></tbody></table></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tasks" class="page-section d-none">
+        <div class="page-heading">
+            <div><span class="soft-label">Tasks</span><h1 class="page-title">学习任务管理</h1></div>
+        </div>
+        <div class="content-card mb-4">
+            <h2>任务表单</h2>
+            <form id="taskForm" class="row g-3">
+                <input type="hidden" name="id">
+                <div class="col-md-3"><label class="form-label">任务名称</label><input class="form-control" name="taskName" required></div>
+                <div class="col-md-3"><label class="form-label">所属计划</label><select class="form-select" name="planId" id="taskPlanSelect" required></select></div>
+                <div class="col-md-2"><label class="form-label">分类</label><select class="form-select" name="category" id="taskCategorySelect" required></select></div>
+                <div class="col-md-2"><label class="form-label">优先级</label><select class="form-select" name="priority"><option value="Q0">Q0 紧急任务</option><option value="Q1">Q1 重要成长任务</option><option value="Q2" selected>Q2 普通维护任务</option><option value="Q3">Q3 低优先级任务</option></select></div>
+                <div class="col-md-2"><label class="form-label">截止日期</label><input class="form-control" name="deadline" type="date"></div>
+                <div class="col-md-3"><label class="form-label">状态</label><select class="form-select" name="status"><option selected>未完成</option><option>进行中</option><option>已完成</option><option>延期</option></select></div>
+                <div class="col-md-9"><label class="form-label">任务描述</label><input class="form-control" name="description"></div>
+                <div class="col-12"><button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#taskAdvancedSettings" aria-expanded="false" aria-controls="taskAdvancedSettings">高级设置</button></div>
+                <div class="col-12 collapse" id="taskAdvancedSettings"><div class="row g-3">
+                    <div class="col-md-3"><label class="form-label">重复规则</label><select class="form-select" name="repeatType" id="taskRepeatType"><option value="NONE" selected>不重复</option><option value="DAILY">每日</option><option value="WEEKLY">每周</option><option value="WORKDAY">工作日</option></select></div>
+                    <div class="col-md-3"><label class="form-label">重复结束日期</label><input class="form-control" name="repeatEndDate" id="taskRepeatEndDate" type="date"></div>
+                    <div class="col-md-3"><label class="form-label">提醒</label><select class="form-select" name="reminderEnabled"><option value="true" selected>启用提醒</option><option value="false">关闭提醒</option></select></div>
+                    <div class="col-md-3"><label class="form-label">提前提醒天数</label><input class="form-control" name="reminderDaysBefore" type="number" min="0" max="30" value="3"></div>
+                </div></div>
+                <div class="col-12"><button class="btn btn-primary">保存任务</button> <button class="btn btn-outline-primary" type="button" onclick="resetForm('taskForm')">清空</button></div>
+            </form>
+        </div>
+        <div class="content-card mb-4">
+            <div class="card-title-row">
+                <h2>批量新增任务</h2>
+                <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#batchTaskHelp" aria-expanded="false" aria-controls="batchTaskHelp">查看填写格式</button>
+            </div>
+            <div class="collapse" id="batchTaskHelp">
+                <div class="batch-help-card">
+                    <p class="mb-2"><strong>批量输入格式：</strong></p>
+                    <pre>任务名称 | 所属计划 | 分类 | 优先级 | 截止日期 | 任务描述</pre>
+                    <p class="mb-2"><strong>示例：</strong></p>
+                    <pre>完成需求分析 | 我的学习计划 | 课程任务 | Q0 | 2026-06-02 | 明确本周必须完成的学习目标
+整理知识点笔记 | 我的学习计划 | 复盘整理 | Q1 | 2026-06-05 | 汇总重点概念和容易出错的地方
+完成阶段练习 | 我的学习计划 | 练习巩固 | Q2 | 2026-06-07 | 完成一组练习并记录错题
+优化学习安排 | 我的学习计划 | 时间管理 | Q3 | 2026-06-08 | 根据完成情况调整后续节奏</pre>
+                    <p class="mb-1"><strong>优先级说明：</strong></p>
+                    <ul class="mb-0">
+                        <li>Q0：紧急任务，必须优先完成</li>
+                        <li>Q1：重要成长任务，对长期能力提升重要</li>
+                        <li>Q2：普通维护任务，日常需要完成</li>
+                        <li>Q3：低优先级任务，可以延后处理</li>
+                    </ul>
+                </div>
+            </div>
+            <form id="batchTaskForm" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">可用学习计划</label>
+                    <div class="available-plan-list" id="availablePlanList"></div>
+                </div>
+                <div class="col-md-9"><label class="form-label">批量输入</label><textarea class="form-control" id="batchTaskText" rows="5" placeholder="每行一个任务：任务名称 | 所属计划 | 分类 | 优先级 | 截止日期 | 任务描述"></textarea></div>
+                <div class="col-12">
+                    <button class="btn btn-primary">批量保存任务</button>
+                    <button class="btn btn-outline-primary" type="button" id="insertBatchExampleBtn">插入示例</button>
+                    <button class="btn btn-outline-primary" type="button" id="clearBatchTaskBtn">清空输入</button>
+                </div>
+            </form>
+        </div>
+        <div class="content-card">
+            <h2>任务列表</h2>
+            <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>任务名称</th><th>所属计划</th><th>分类</th><th>优先级</th><th>截止日期</th><th>重复</th><th>提醒</th><th>状态</th><th>操作</th></tr></thead><tbody id="taskTable"></tbody></table></div>
+        </div>
+    </section>
+
+    <section id="taskEdit" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Task Edit</span>
+                <h1 class="page-title">编辑学习任务</h1>
+            </div>
+            <button class="btn btn-outline-primary" type="button" onclick="showPage('tasks')">返回任务列表</button>
+        </div>
+        <div class="content-card">
+            <h2>任务编辑表单</h2>
+            <form id="taskEditForm" class="row g-3">
+                <input type="hidden" name="id">
+                <div class="col-md-4"><label class="form-label">任务名称</label><input class="form-control" name="taskName" required></div>
+                <div class="col-md-4"><label class="form-label">所属计划</label><select class="form-select" name="planId" id="editTaskPlanSelect" required></select></div>
+                <div class="col-md-4"><label class="form-label">分类</label><select class="form-select" name="category" id="editTaskCategorySelect" required></select></div>
+                <div class="col-md-3"><label class="form-label">优先级</label><select class="form-select" name="priority"><option value="Q0">Q0 紧急任务</option><option value="Q1">Q1 重要成长任务</option><option value="Q2">Q2 普通维护任务</option><option value="Q3">Q3 低优先级任务</option></select></div>
+                <div class="col-md-3"><label class="form-label">截止日期</label><input class="form-control" name="deadline" type="date"></div>
+                <div class="col-md-3"><label class="form-label">状态</label><select class="form-select" name="status"><option>未完成</option><option>已完成</option><option>进行中</option><option>延期</option></select></div>
+                <div class="col-md-12"><label class="form-label">任务描述</label><input class="form-control" name="description"></div>
+                <div class="col-12"><button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#taskEditAdvancedSettings" aria-expanded="false" aria-controls="taskEditAdvancedSettings">高级设置</button></div>
+                <div class="col-12 collapse" id="taskEditAdvancedSettings"><div class="row g-3">
+                    <div class="col-md-3"><label class="form-label">重复规则</label><select class="form-select" name="repeatType"><option value="NONE">不重复</option><option value="DAILY">每日</option><option value="WEEKLY">每周</option><option value="WORKDAY">工作日</option></select></div>
+                    <div class="col-md-3"><label class="form-label">重复结束日期</label><input class="form-control" name="repeatEndDate" type="date"></div>
+                    <div class="col-md-3"><label class="form-label">提醒</label><select class="form-select" name="reminderEnabled"><option value="true">启用提醒</option><option value="false">关闭提醒</option></select></div>
+                    <div class="col-md-3"><label class="form-label">提前提醒天数</label><input class="form-control" name="reminderDaysBefore" type="number" min="0" max="30"></div>
+                </div></div>
+                <div class="col-12">
+                    <button class="btn btn-primary">保存修改</button>
+                    <button class="btn btn-outline-primary" type="button" onclick="showPage('tasks')">取消</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section id="records" class="page-section d-none">
+        <div class="page-heading">
+            <div><span class="soft-label">Records</span><h1 class="page-title">学习记录管理</h1></div>
+        </div>
+        <div class="content-card mb-4">
+            <h2>记录表单</h2>
+            <form id="recordForm" class="row g-3">
+                <input type="hidden" name="id">
+                <div class="col-md-3"><label class="form-label">学习任务</label><select class="form-select" name="taskId" id="recordTaskSelect" required></select></div>
+                <div class="col-md-3"><label class="form-label">学习日期</label><input class="form-control" name="studyDate" type="date" required></div>
+                <div class="col-md-3"><label class="form-label">学习时长（分钟）</label><input class="form-control" name="duration" type="number" min="0"></div>
+                <div class="col-md-3"><label class="form-label">完成情况</label><select class="form-select" name="completionStatus"><option>已完成</option><option selected>部分完成</option><option>未完成</option></select></div>
+                <div class="col-md-6"><label class="form-label">学习内容</label><textarea class="form-control" name="content" rows="4" required></textarea></div>
+                <div class="col-md-6"><label class="form-label">问题与反思</label><textarea class="form-control" name="problems" id="recordProblems" rows="4"></textarea></div>
+                <div class="col-12"><label class="form-label">改进计划</label><textarea class="form-control" name="improvementPlan" id="recordImprovementPlan" rows="4"></textarea></div>
+                <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
+                    <button class="btn btn-primary" type="submit" id="recordSaveBtn" data-record-submit>保存记录</button>
+                    <button class="btn btn-outline-primary" type="button" onclick="resetRecordForm()">清空</button>
+                    <button class="btn btn-outline-primary" type="button" id="recordAiImprovementBtn">AI 生成改进计划</button>
+                    <span class="muted-text" id="recordAiImprovementTip">填写学习内容和问题与反思后生成改进计划。</span>
+                </div>
+                <div class="col-12 d-none" id="recordAiSuggestedActionsBox">
+                    <div class="ai-suggestion-box">
+                        <strong>行动建议</strong>
+                        <ul id="recordAiSuggestedActionsList"></ul>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="content-card mb-4">
+            <div class="card-title-row">
+                <div><h2>AI 周报</h2><p class="muted-text mb-0">根据最近 7 天学习记录生成总结、问题和下周建议。</p></div>
+                <button class="btn btn-outline-primary btn-sm" type="button" id="weeklyReportBtn">生成 AI 周报</button>
+            </div>
+            <div id="weeklyReportBox" class="stack-list"><div class="list-row"><p>点击按钮生成本周学习报告。</p></div></div>
+        </div>        <div class="content-card">
+            <h2>记录列表</h2>
+            <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>任务</th><th>日期</th><th>时长</th><th>内容</th><th>问题与反思</th><th>改进计划</th><th>完成情况</th><th>操作</th></tr></thead><tbody id="recordTable"></tbody></table></div>
+        </div>
+    </section>
+
+    <section id="statistics" class="page-section d-none">
+        <div class="page-heading">
+            <div><span class="soft-label">Statistics</span><h1 class="page-title">学习统计</h1></div>
+        </div>
+        <div class="row g-3 mb-4" id="statisticsMetrics"></div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="content-card stat-summary-card">
+                    <h2>任务完成率</h2>
+                    <strong id="completionRateText">0%</strong>
+                    <p class="muted-text" id="completionRateDetail">暂无任务数据</p>
+                    <div class="progress stat-progress"><div class="progress-bar" id="completionProgress" style="width:0%">0%</div></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="content-card">
+                    <h2>任务状态分布</h2>
+                    <div class="mini-chart" id="statusChart"></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="content-card">
+                    <h2>优先级分布</h2>
+                    <div class="mini-chart" id="priorityChart"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="calendar" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Calendar</span>
+                <h1 class="page-title">学习日历</h1>
+                <p class="muted-text mt-2 mb-0">按学习记录日期查看每天真实完成的学习情况。</p>
+            </div>
+            <div class="calendar-toolbar">
+                <button class="btn btn-outline-primary btn-sm" type="button" id="prevMonthBtn">上个月</button>
+                <button class="btn btn-primary btn-sm" type="button" id="todayMonthBtn">本月</button>
+                <button class="btn btn-outline-primary btn-sm" type="button" id="nextMonthBtn">下个月</button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="content-card">
+                    <div class="card-title-row">
+                        <h2 id="calendarMonthTitle">学习日历</h2>
+                        <div class="calendar-legend">
+                            <span><i class="legend-dot calendar-dot-done"></i>已完成</span>
+                            <span><i class="legend-dot calendar-dot-doing"></i>部分完成</span>
+                            <span><i class="legend-dot calendar-dot-overdue"></i>未完成</span>
+                            <span><i class="legend-dot calendar-dot-node"></i>重要节点</span>
+                        </div>
+                    </div>
+                    <div class="calendar-week-row">
+                        <span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>周日</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="content-card calendar-day-panel">
+                    <h2 id="calendarSelectedTitle">当天详情</h2>
+                    <div id="calendarDayTasks" class="stack-list"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="importantNodes" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Important Nodes</span>
+                <h1 class="page-title">重要节点</h1>
+                <p class="muted-text mt-2 mb-0">按年份记录考试、截止、比赛、汇报等重要学习时间点，重要程度由系统自动计算。</p>
+            </div>
+            <div class="important-node-toolbar">
+                <select class="form-select form-select-sm" id="importantNodeYearSelect" aria-label="选择年份"></select>
+                <button class="btn btn-primary btn-sm" type="button" id="openImportantNodeModalBtn">+ 新增节点</button>
+            </div>
+        </div>
+        <div class="content-card mb-4">
+            <div class="card-title-row">
+                <h2>关键词规则</h2>
+            </div>
+            <form id="importantKeywordRuleForm" class="row g-3 mb-3">
+                <input type="hidden" name="id">
+                <div class="col-md-3"><label class="form-label">关键词</label><input class="form-control" name="keyword" maxlength="60" required placeholder="如 XCPC、国赛、答辩"></div>
+                <div class="col-md-2"><label class="form-label">适用类型</label><select class="form-select" name="nodeType"><option value="">全部类型</option><option>考试</option><option>截止</option><option>比赛</option><option>汇报</option><option>其他</option></select></div>
+                <div class="col-md-3"><label class="form-label">影响方式</label><select class="form-select" name="effect"><option value="SCORE">加分</option><option value="MIN_IMPORTANT">至少重要</option><option value="URGENT">直接紧急</option></select></div>
+                <div class="col-md-2"><label class="form-label">加分值</label><input class="form-control" name="scoreDelta" type="number" min="1" max="50" value="10"></div>
+                <div class="col-md-2 d-flex align-items-end gap-2"><label class="form-check mb-2"><input class="form-check-input" type="checkbox" name="enabled" checked> 启用</label></div>
+                <div class="col-12 d-flex justify-content-end gap-2"><button class="btn btn-outline-primary" type="button" id="resetKeywordRuleBtn">清空</button><button class="btn btn-primary" type="submit">保存规则</button></div>
+            </form>
+            <div class="table-responsive">
+                <table class="table app-table align-middle">
+                    <thead><tr><th>关键词</th><th>适用类型</th><th>影响方式</th><th>加分</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody id="importantKeywordRuleTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="content-card">
+            <div class="card-title-row"><h2 id="importantNodeListTitle">重要节点</h2></div>
+            <div id="importantNodeList" class="important-node-list"></div>
+        </div>
+    </section>
+    <section id="themes" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Theme Center</span>
+                <h1 class="page-title">主题皮肤中心</h1>
+                <p class="muted-text mt-2 mb-0">选择喜欢的界面风格，打造更适合自己的学习环境。</p>
+            </div>
+        </div>
+        <div class="content-card mb-4">
+            <div class="card-title-row">
+                <h2>当前使用主题</h2>
+                <span id="currentThemeBadge" class="badge soft-badge">浅粉暖色</span>
+            </div>
+            <p id="currentThemeDesc" class="muted-text mb-0">适合温柔清爽的学习风格</p>
+        </div>
+        <div class="row g-4" id="themeCardList"></div>
+    </section>
+
+    <section id="feedback" class="page-section d-none">
+        <div class="page-heading">
+            <div>
+                <span class="soft-label">Feedback</span>
+                <h1 class="page-title">意见反馈</h1>
+                <p class="muted-text mt-2 mb-0">提交使用建议或遇到的问题，管理员会在后台处理。</p>
+            </div>
+        </div>
+        <div class="content-card mb-4">
+            <h2>提交反馈</h2>
+            <form id="feedbackForm" class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">反馈内容</label>
+                    <textarea class="form-control" name="content" rows="4" placeholder="请描述你的建议或遇到的问题" required></textarea>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-primary">提交反馈</button>
+                    <button class="btn btn-outline-primary" type="button" onclick="resetForm('feedbackForm')">清空</button>
+                </div>
+            </form>
+        </div>
+        <div class="content-card">
+            <h2>我的反馈</h2>
+            <div class="table-responsive">
+                <table class="table app-table align-middle">
+                    <thead><tr><th>反馈内容</th><th>状态</th><th>管理员回复</th><th>提交时间</th></tr></thead>
+                    <tbody id="feedbackTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div class="modal fade" id="importantNodeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content important-node-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importantNodeModalTitle">新增重要节点</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-pills soft-tabs mb-3" id="importantNodeTabs" role="tablist">
+                    <li class="nav-item" role="presentation"><button class="nav-link active" id="singleImportantNodeTab" data-bs-toggle="pill" data-bs-target="#singleImportantNodePane" type="button" role="tab">单个新增</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" id="batchImportantNodeTab" data-bs-toggle="pill" data-bs-target="#batchImportantNodePane" type="button" role="tab">批量导入</button></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="singleImportantNodePane" role="tabpanel">
+                        <form id="importantNodeForm" class="row g-3">
+                            <input type="hidden" name="id">
+                            <div class="col-md-8"><label class="form-label">节点标题</label><input class="form-control" name="title" required></div>
+                            <div class="col-md-4"><label class="form-label">类型</label><select class="form-select" name="type" required><option>考试</option><option>截止</option><option>比赛</option><option>汇报</option><option>其他</option></select></div>
+                            <div class="col-md-3"><label class="form-label">开始日期</label><input class="form-control" name="startDate" type="date" required></div>
+                            <div class="col-md-3"><label class="form-label">开始时间</label><input class="form-control" name="startTime" type="time"></div>
+                            <div class="col-md-3"><label class="form-label">结束日期</label><input class="form-control" name="endDate" type="date" required></div>
+                            <div class="col-md-3"><label class="form-label">结束时间</label><input class="form-control" name="endTime" type="time"></div>
+                            <div class="col-md-6"><label class="form-label">关联学习计划（选填）</label><select class="form-select" name="planId" id="importantNodePlanSelect"></select></div>
+                            <div class="col-md-6"><label class="form-label">关联学习任务（选填）</label><select class="form-select" name="taskId" id="importantNodeTaskSelect"></select></div>
+                            <div class="col-12"><label class="form-label">描述</label><textarea class="form-control" name="description" rows="3"></textarea></div>
+                            <div class="col-12 d-flex justify-content-end gap-2"><button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">取消</button><button class="btn btn-primary" type="submit">保存</button></div>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="batchImportantNodePane" role="tabpanel">
+                        <form id="importantNodeBatchForm" class="row g-3">
+                            <div class="col-12"><div class="batch-help-card important-node-batch-help">
+                                <p class="mb-2"><strong>请按以下格式输入，每行一个重要节点：</strong></p>
+                                <pre>标题 | 类型 | 开始日期 | 开始时间 | 结束日期 | 结束时间 | 描述</pre>
+                                <p class="mb-2"><strong>示例：</strong></p>
+                                <pre>六级考试 | 考试 | 2026-06-20 | 15:00 | 2026-06-20 | 17:00 | 带身份证、准考证、耳机
+数模国赛 | 比赛 | 2026-06-20 | 09:00 | 2026-06-22 | 18:00 | 组队建模
+期末考试周 | 考试 | 2026-06-24 |  | 2026-07-03 |  | 复习周安排</pre>
+                                <p class="mb-1"><strong>规则：</strong></p>
+                                <ul class="mb-0"><li>每行一个节点</li><li>字段之间使用英文竖线 | 分隔</li><li>开始日期和结束日期格式为 YYYY-MM-DD；单日事件两者填写同一天</li><li>时间格式为 HH:mm，可以留空</li><li>类型只能填写：考试、截止、比赛、汇报、其他</li><li>重要程度由系统根据类型、日期和关键词规则自动计算</li><li>描述可以留空</li></ul>
+                            </div></div>
+                            <div class="col-12"><textarea class="form-control" id="importantNodeBatchText" rows="8" placeholder="在这里粘贴批量节点内容..."></textarea></div>
+                            <div class="col-12 d-flex justify-content-end gap-2"><button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">取消</button><button class="btn btn-primary" type="submit">导入节点</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/common.js?v=20260608-calendar-range1"></script>
+<script src="../js/app.js?v=20260707-split-dashboard"></script>
+<script src="../js/tasks.js?v=20260706-repeat-reminder"></script>
+<script src="../js/records.js?v=20260619-split-core"></script>
+<script src="../js/important-nodes.js?v=20260707-split-important-nodes"></script>
+<script src="../js/calendar.js?v=20260622-detail-label"></script>
+<script src="../js/dashboard.js?v=20260707-split-dashboard"></script>
+</body>
+</html>
+
+

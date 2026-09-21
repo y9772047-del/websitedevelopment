@@ -1,0 +1,124 @@
+.admin-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.admin-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 24px 18px;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border-soft);
+}
+
+.admin-sidebar h1 {
+    margin: 0 0 22px;
+    color: var(--title);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.admin-menu {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    text-align: left;
+}
+
+.admin-menu:hover,
+.admin-menu.active {
+    background: var(--primary-soft);
+    color: var(--title);
+}
+
+.admin-main {
+    padding: 28px;
+    min-width: 0;
+}
+
+.admin-modal {
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border-soft);
+}
+
+.admin-detail-box {
+    padding: 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--card-bg) 88%, var(--primary-soft));
+    white-space: pre-wrap;
+}
+
+body.theme-dark .login-card,
+body.theme-dark .content-card,
+body.theme-dark .metric-card {
+    border-color: var(--border-soft);
+    box-shadow: var(--shadow);
+}
+
+body.theme-dark .metric-card {
+    background: linear-gradient(145deg, var(--card-bg-soft), var(--card-bg));
+}
+body.theme-dark .app-table tbody td {
+    border-color: var(--border-soft);
+}
+body.theme-dark .calendar-task-done,
+body.theme-dark .success-badge,
+body.theme-dark .status-done {
+    color: #9bd8ba;
+    background: rgba(76, 151, 113, 0.18);
+}
+
+body.theme-dark .calendar-task-overdue,
+body.theme-dark .danger-badge,
+body.theme-dark .status-delay,
+body.theme-dark .priority-q0 {
+    color: #f0aaaa;
+    background: rgba(201, 106, 106, 0.18);
+}
+body.theme-dark .node-type-exam,
+body.theme-dark .priority-q1 {
+    color: #c0b8ff;
+    background: rgba(139, 124, 246, 0.17);
+}
+body.theme-dark .node-type-contest,
+body.theme-dark .priority-q2 {
+    color: #9fc5f4;
+    background: rgba(91, 141, 239, 0.18);
+}
+
+body.theme-dark .node-type-report,
+body.theme-dark .node-important,
+body.theme-dark .warning-badge,
+body.theme-dark .status-waiting {
+    color: #e8c77f;
+    background: rgba(216, 166, 79, 0.18);
+}
+
+body.theme-dark .node-type-other,
+body.theme-dark .node-normal,
+body.theme-dark .priority-q3 {
+    color: #b8c1d6;
+    background: rgba(148, 163, 184, 0.14);
+}
+@media (max-width: 768px) {
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-sidebar {
+        position: static;
+        height: auto;
+    }
+
+    .admin-main {
+        padding: 18px;
+    }
+}
