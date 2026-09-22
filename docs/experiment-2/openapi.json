@@ -377,7 +377,12 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["Q0", "Q1", "Q2", "Q3"]
+              "enum": [
+                "Q0",
+                "Q1",
+                "Q2",
+                "Q3"
+              ]
             }
           },
           {
@@ -412,6 +417,343 @@
           },
           "500": {
             "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建当前用户任务",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/tasks/categories": {
+      "get": {
+        "summary": "读取固定任务分类",
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StringListResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/tasks/batch": {
+      "post": {
+        "summary": "批量创建当前用户任务",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TaskInput"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/tasks/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "summary": "修改本人任务",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除本人任务及其学习记录",
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/records": {
+      "get": {
+        "summary": "查询当前用户学习记录",
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordListResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建学习记录并累计计划投入",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/records/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "summary": "修改本人学习记录并刷新计划投入",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除本人学习记录并扣减计划投入",
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/ai/generate-improvement": {
+      "post": {
+        "summary": "根据记录草稿生成改进计划",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiImprovementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiImprovementResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
           }
         }
       }
@@ -772,6 +1114,272 @@
                 "$ref": "#/components/schemas/User"
               }
             ],
+            "nullable": true
+          }
+        }
+      },
+      "TaskInput": {
+        "type": "object",
+        "required": [
+          "taskName",
+          "planId",
+          "category"
+        ],
+        "properties": {
+          "taskName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "planId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "Q0",
+              "Q1",
+              "Q2",
+              "Q3"
+            ]
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "repeatType": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "DAILY",
+              "WEEKLY",
+              "WORKDAY"
+            ]
+          },
+          "repeatEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "reminderEnabled": {
+            "type": "boolean"
+          },
+          "reminderDaysBefore": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 30
+          }
+        }
+      },
+      "TaskResult": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Task",
+            "nullable": true
+          }
+        }
+      },
+      "StringListResult": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RecordInput": {
+        "type": "object",
+        "required": [
+          "taskId",
+          "studyDate",
+          "content"
+        ],
+        "properties": {
+          "taskId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "studyDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "content": {
+            "type": "string"
+          },
+          "completionStatus": {
+            "type": "string",
+            "enum": [
+              "已完成",
+              "部分完成",
+              "未完成"
+            ]
+          },
+          "problems": {
+            "type": "string",
+            "nullable": true
+          },
+          "improvementPlan": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Record": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecordInput"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "userId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "createTime": {
+                "type": "string",
+                "nullable": true
+              },
+              "updateTime": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "RecordResult": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Record",
+            "nullable": true
+          }
+        }
+      },
+      "RecordListResult": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            }
+          }
+        }
+      },
+      "AiImprovementInput": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "planName": {
+            "type": "string"
+          },
+          "taskName": {
+            "type": "string"
+          },
+          "studyContent": {
+            "type": "string"
+          },
+          "completion": {
+            "type": "string"
+          },
+          "problems": {
+            "type": "string"
+          },
+          "problemSummary": {
+            "type": "string"
+          }
+        }
+      },
+      "AiImprovementResponse": {
+        "type": "object",
+        "properties": {
+          "improvementPlan": {
+            "type": "string"
+          },
+          "suggestedActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "generationSourceLabel": {
+            "type": "string"
+          },
+          "generationSourceDetail": {
+            "type": "string",
+            "nullable": true
+          },
+          "generationSource": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AiImprovementResult": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AiImprovementResponse",
             "nullable": true
           }
         }

@@ -1,18 +1,18 @@
 # 实验二验证记录
 
-日期：2026-09-22。范围为独立 Vue 前端第一阶段；后端业务代码、数据库结构和原静态页面未在本阶段修改。
+日期：2026-09-22。范围为独立 Vue 前端前两阶段；后端业务代码、数据库结构和原静态页面未在本阶段修改。
 
 | 验证 | 实际结果 |
 | --- | --- |
-| 计划与 API 单元测试 | node --test frontend/src/api.test.js frontend/src/plan.test.js：10 项通过 |
+| 前端单元测试 | node --test frontend/src/*.test.js：15 项通过（API、计划、任务、批量导入、记录、AI 请求） |
 | JavaScript 语法检查 | api.js、plan.js、main.js 和浏览器回归脚本通过 node --check |
-| Vue 生产构建 | Vite 成功构建 71 个模块 |
+| Vue 生产构建 | Vite 成功构建 75 个模块 |
 | Maven 完整测试 | mvnw.cmd test：57 项，0 失败、0 错误、0 跳过 |
 | Maven 打包 | mvnw.cmd clean package -DskipTests：BUILD SUCCESS |
 | 独立代码审查 | 发现切换页面丢失草稿、保存期间可导航两项问题；均已修复 |
 | 真实浏览器与数据库联调 | 登录、注册、Session、计划 CRUD、详情任务读取、CORS、响应式布局及错误边界通过 |
 | 测试数据清理 | 临时计划已删除；临时用户按精确 id 和用户名删除，确认无关联数据和残留账号 |
-| OpenAPI 检查 | JSON 可解析；路径、请求字段和响应 schema 按 Controller 与 Entity 核对 |
+| OpenAPI 检查 | 20 个操作、21 个 schema、21 个引用均可解析并已按 Controller 与 Entity 核对 |
 | Git 差异检查 | git diff --check 通过，仅有 Windows 换行提示 |
 
 浏览器回归脚本 frontend/tests/browser/phase1-interactions.js 读取已有计划详情并拦截保存请求，用于验证草稿保留和保存期间导航锁定，不写数据库。
@@ -28,4 +28,16 @@
 - 后端不可达时提示 http://localhost:8080/api，恢复后可重新加载。
 - 管理员登录仍跳转原 /pages/admin.html。
 
-本阶段没有修改数据库 schema，没有 SQL 迁移；没有修改 API 路径或响应结构；没有弱化登录、角色或 userId 所有权检查。原任务、记录、日历、统计和管理后台继续由旧前端承载。
+本阶段没有修改数据库 schema，没有 SQL 迁移；没有修改 API 路径或响应结构；没有弱化登录、角色或 userId 所有权检查。日历、重要节点、统计和管理后台继续由旧前端承载。
+## 第二阶段浏览器验证
+
+真实 Edge 读取了现有计划、任务分类、任务和学习记录；没有发送新增、修改或删除请求。
+
+- 顶栏可在计划、任务、记录之间切换。
+- Q1 筛选只返回两条 Q1 任务。
+- 任务表单草稿在切换到记录页再返回后仍保留。
+- 记录任务选项以“计划 / 任务”显示。
+- 未选择任务时，AI 生成按钮在前端阻止请求并显示提示。
+- 浏览器控制台没有 Vue 警告；唯一错误为 favicon.ico 404。
+- 登录完成后计划、任务、记录导航立即可用。
+- 从计划详情切换到任务页再返回计划页，会恢复计划列表而不是停留在旧详情。

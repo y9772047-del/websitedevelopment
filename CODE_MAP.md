@@ -242,9 +242,10 @@
 
 ## 实验二：独立 Vue 前端
 
-- `frontend/index.html` → `frontend/src/main.js` → `App.vue`：独立 Vue 入口、会话恢复、主题与新旧系统导航。
-- `frontend/src/views/AuthView.vue`：恢复原登录/注册页结构；`PlansView.vue` 与 `components/PlanForm.vue`：学习计划列表、详情、任务只读列表及 CRUD 表单。
-- `frontend/src/api.js`：Axios、Session 凭证、Result 解包及 HTTP/超时/网络错误；`frontend/src/plan.js`：计划字段白名单、长度、状态和日期校验。
-- `frontend/vite.config.js`：独立构建入口；复用原 `static/css/base.css` 和 `auth.css`，不依赖原静态 JS。
-- `WebConfig.apiCorsFilter`：API 跨域白名单，`APP_CORS_ALLOWED_ORIGINS` 可配置。
-- `docs/experiment-2/`：运行说明、OpenAPI 文档和验证记录。
+- frontend/index.html → frontend/src/main.js → App.vue：独立 Vue 入口、会话恢复、主题和导航。
+- AuthView.vue：登录/注册；PlansView.vue 与 PlanForm.vue：计划列表、详情、任务只读列表及 CRUD。
+- TasksView.vue：任务 CRUD、筛选、重复/提醒设置和批量导入；RecordsView.vue：记录 CRUD 与 AI 改进建议。
+- api.js：Axios、Session 凭证与错误处理；plan.js 和 workflow.js：计划、任务、批量导入、记录与 AI 请求校验。
+- vite.config.js：独立构建入口；复用原 base.css、auth.css 和 app.css，不依赖原静态 JS。
+- WebConfig.apiCorsFilter：API 跨域白名单，APP_CORS_ALLOWED_ORIGINS 可配置。
+- docs/experiment-2/：运行说明、OpenAPI 文档和验证记录。

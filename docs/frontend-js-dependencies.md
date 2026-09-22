@@ -144,10 +144,13 @@ When splitting frontend JS:
 
 ## Experiment 2 independent Vue entry
 
-- `frontend/index.html` loads `src/main.js` as an ES module; Vite bundles and hashes assets.
-- `main.js` imports Vue, `App.vue`, and the existing `static/css/base.css` and `static/css/auth.css`.
-- `App.vue` imports `api.js`, `views/AuthView.vue`, and `views/PlansView.vue`.
-- `AuthView.vue` owns login and registration state. `PlansView.vue` owns the plan list/detail/edit state and imports `components/PlanForm.vue`; both plan components import validation helpers from `plan.js`.
-- `api.js` imports Axios and centralizes credential, Result, HTTP, timeout, and network-error handling.
-- The Vue entry has no `window.*` exports, inline handlers, Bootstrap JavaScript, or legacy JavaScript dependencies.
+- frontend/index.html loads src/main.js as an ES module; Vite bundles and hashes assets.
+- main.js imports Vue, App.vue, and the existing base.css, auth.css, and app.css.
+- App.vue imports api.js plus AuthView.vue, PlansView.vue, TasksView.vue, and RecordsView.vue; it owns navigation and per-view busy state.
+- AuthView.vue owns authentication. PlansView.vue and PlanForm.vue own plan CRUD and detail.
+- TasksView.vue owns task CRUD, filters, repeat/reminder fields, and batch import.
+- RecordsView.vue owns record CRUD and AI improvement suggestions.
+- The phase-two views import pure validation and payload helpers from workflow.js.
+- api.js imports Axios and centralizes credentials, Result, HTTP, timeout, and network-error handling.
+- The Vue entry has no window exports, inline handlers, Bootstrap JavaScript, or legacy JavaScript dependencies.
 - The original static page script order and version query strings remain unchanged.

@@ -2,19 +2,20 @@
 
 ## 完成范围
 
-后端沿用 Spring Boot @RestController 提供 RESTful JSON。独立 frontend 使用 Vue 3 单文件组件和 Axios，第一阶段覆盖：
+后端沿用 Spring Boot @RestController 提供 RESTful JSON。独立 frontend 使用 Vue 3 单文件组件和 Axios，前两阶段覆盖：
 
 - 登录、注册、退出和刷新后的 Session 恢复。
 - 学习计划列表、详情、新增、修改、删除。
-- 计划详情中的任务只读列表。
+- 学习任务 CRUD、重复与提醒设置、计划/状态/优先级/日期筛选和批量导入。
+- 学习记录 CRUD、任务关联和 AI 改进建议。
 - HTTP 业务失败、401、超时和后端不可达提示。
 - 原登录页和学习计划页的主要结构、文案、主题及响应式导航。
 
-业务响应保持 {success,message,data}。Vue 只提交允许编辑的计划字段，不提交 id、userId 或累计投入字段。原任务、学习记录、日历、统计和管理后台仍可从“其他功能（原系统）”进入，尚未迁移为 Vue。
+业务响应保持 {success,message,data}。Vue 只提交允许编辑的字段，不提交 userId 或服务端累计值。日历、重要节点、统计和管理后台仍从“其他功能（原系统）”进入，尚未迁移为 Vue。
 
 后端已有的 CORS Filter 在登录拦截器前处理预检。默认允许 http://localhost:5173 和 http://localhost:4173，支持 Cookie 凭证；真实请求仍经过原登录、权限和数据所有权检查。
 
-Vue 复用原 base.css 和 auth.css，不加载原静态 JavaScript。模板插值会转义用户文本。“记住用户名”只保存用户名，不保存密码或 Session 标识。
+Vue 复用原 base.css、auth.css 和 app.css，不加载原静态 JavaScript。模板插值会转义用户文本。“记住用户名”只保存用户名，不保存密码或 Session 标识。
 
 ## 本地运行
 
@@ -56,7 +57,7 @@ VITE_API_BASE_URL=https://api.example.com/api
 
 ## 接口与字段核对
 
-openapi.json 是 OpenAPI 3.0.3 文档，覆盖当前 Vue 第一阶段实际调用的 10 个操作：登录、注册、当前用户、退出、计划列表与 CRUD、按计划读取任务。
+openapi.json 是 OpenAPI 3.0.3 文档，覆盖当前 Vue 前两阶段实际调用的 20 个操作：认证、计划、任务、任务分类与批量导入、学习记录和 AI 改进建议。
 
 - DB plan_name 对应 Java/API/Vue planName，上限 100；goal 上限 255。
 - 日期格式为 yyyy-MM-dd；新建计划可发送 null。现有 ORM 更新策略无法可靠清空已设置日期，因此编辑表单会阻止这种误导性的保存。
@@ -76,11 +77,12 @@ openapi.json 是 OpenAPI 3.0.3 文档，覆盖当前 Vue 第一阶段实际调�
 3. 验证计划字段往返数据库，用户输入不会生成 HTML 节点。
 4. 验证 CORS、会话失效、后端不可达提示、390px 移动布局和管理员跳转。
 5. 验证新建草稿在页面切换后保留，保存期间导航禁用；模拟保存测试不写数据库。
+6. 验证任务和记录页读取真实数据、Q1 筛选、任务草稿跨页保留，以及未选任务时 AI 请求被阻止。
 
 命令与结果见 verification.md。
 
 ## Git 与回退
 
-初始实验二提交为 cf14ef7，当前第一阶段在分支 codex/vue-phase1-original-ui。仓库原有未提交文件继续保留，不属于本次迁移。
+初始实验二提交为 cf14ef7，第一阶段提交为 f180e03；第二阶段位于分支 codex/vue-phase2-tasks-records。仓库原有未提交文件继续保留，不属于本次迁移。
 
 Git 只能撤销代码，不能恢复数据库中被删除的数据。撤销已提交迁移时先检查 git status，然后使用 git revert <提交号>；不要对包含个人未提交工作的仓库使用 git reset --hard 或 git clean。
