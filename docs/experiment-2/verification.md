@@ -1,25 +1,31 @@
 # 实验二验证记录
 
-日期：2026-09-21。验证对象为当前工作区（包含用户原有未提交测试修正）。
+日期：2026-09-22。范围为独立 Vue 前端第一阶段；后端业务代码、数据库结构和原静态页面未在本阶段修改。
 
 | 验证 | 实际结果 |
 | --- | --- |
-| `mvnw.cmd -Dtest=ExperimentCorsTest test`，CORS 实现前 | 3 项中 2 项失败：缺少跨域响应头、预检 403；用于确认问题 |
-| `mvnw.cmd test`，实现后 | 57 项，0 失败、0 错误、0 跳过 |
-| `mvnw.cmd clean package -DskipTests` | BUILD SUCCESS，生成 `target/study-plan-system-1.0.0.jar` |
-| `node --test frontend/src/api.test.js` | 3 项全部通过 |
-| `node --check`，api.js、main.js、vite.config.js | 全部通过 |
-| `pnpm --dir frontend build`，审查修复后 | 成功，66 个模块，输出 `frontend/dist/` |
-| OpenAPI JSON 解析与内部引用检查 | 8 个操作，19 个引用均可解析；不是完整 OpenAPI 规范校验器 |
-| `git diff --check` | 通过 |
-| 独立代码审查 | 发现编辑清空日期无法生效的问题；已在前端阻止该操作并提示，不改后端更新语义 |
-| 真实 MySQL + 浏览器人工联调、界面视觉验收 | 未执行，按 README 中步骤完成；不能将 MockMvc 和 Axios 模拟测试当作实际联调 |
-| 远程 GitHub 同步 | 未完成推送，不声称已有云端备份 |
+| 计划与 API 单元测试 | node --test frontend/src/api.test.js frontend/src/plan.test.js：10 项通过 |
+| JavaScript 语法检查 | api.js、plan.js、main.js 和浏览器回归脚本通过 node --check |
+| Vue 生产构建 | Vite 成功构建 71 个模块 |
+| Maven 完整测试 | mvnw.cmd test：57 项，0 失败、0 错误、0 跳过 |
+| Maven 打包 | mvnw.cmd clean package -DskipTests：BUILD SUCCESS |
+| 独立代码审查 | 发现切换页面丢失草稿、保存期间可导航两项问题；均已修复 |
+| 真实浏览器与数据库联调 | 登录、注册、Session、计划 CRUD、详情任务读取、CORS、响应式布局及错误边界通过 |
+| 测试数据清理 | 临时计划已删除；临时用户按精确 id 和用户名删除，确认无关联数据和残留账号 |
+| OpenAPI 检查 | JSON 可解析；路径、请求字段和响应 schema 按 Controller 与 Entity 核对 |
+| Git 差异检查 | git diff --check 通过，仅有 Windows 换行提示 |
 
-MockMvc 覆盖：可信来源 PUT 预检无需登录、真实请求 401 且含 CORS 头、不可信来源拒绝、已登录列表、创建计划从 Session 取 userId 且清空输入 id、空名称业务失败、错误日期 400、不可见计划查询失败。服务层使用 Mock，不连接数据库。
+浏览器回归脚本 frontend/tests/browser/phase1-interactions.js 读取已有计划详情并拦截保存请求，用于验证草稿保留和保存期间导航锁定，不写数据库。
 
-Axios 测试覆盖：凭证开关及 Result 解包、HTTP 200 业务失败、HTTP 401 标记。
+真实 CRUD 使用单独注册的临时普通用户，没有编辑原有用户的计划。数据库只执行了针对该临时账号的精确清理，没有执行建表、删表、清库或 schema 迁移。
 
-环境处理：通过已有 JDK 21 设置当前命令的 JAVA_HOME；未修改系统环境变量。前端使用已锁定 pnpm-lock.yaml，明确允许 esbuild 安装脚本。
+浏览器还验证了以下边界：
 
-未执行数据库脚本，不改变表结构、现有控制器/响应结构、登录或所有权检查、原页面及全局样式。新增前端只覆盖实验二所需的登录和学习计划功能。
+- 用户输入 <img src=x onerror=alert(1)> 后没有生成图片节点。
+- 已设置日期不能在编辑时直接清空，避免后端忽略 null 后仍提示保存成功。
+- 记住用户名只写入用户名，Local Storage 不包含演示密码。
+- 真实 Session 失效会清除计划界面并提示重新登录。
+- 后端不可达时提示 http://localhost:8080/api，恢复后可重新加载。
+- 管理员登录仍跳转原 /pages/admin.html。
+
+本阶段没有修改数据库 schema，没有 SQL 迁移；没有修改 API 路径或响应结构；没有弱化登录、角色或 userId 所有权检查。原任务、记录、日历、统计和管理后台继续由旧前端承载。

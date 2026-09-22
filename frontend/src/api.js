@@ -8,7 +8,12 @@ export function createApi(baseURL) {
     }
     return response.data.data;
   }, failure => {
-    const error = new Error(failure.response?.data?.message || (failure.response ? `请求失败（${failure.response.status}）` : '无法连接服务，请检查网络或稍后重试'));
+    const timeout = failure.code === 'ECONNABORTED' || failure.code === 'ETIMEDOUT';
+    const fallback = failure.response
+      ? `请求失败（${failure.response.status}）`
+      : timeout ? '请求超时，请稍后重试；保存操作可先刷新列表确认结果'
+        : `无法连接后端 ${baseURL}。请确认后端已启动；若已启动，请检查接口地址和跨域配置。`;
+    const error = new Error(failure.response?.data?.message || fallback);
     error.status = failure.response?.status;
     return Promise.reject(error);
   });

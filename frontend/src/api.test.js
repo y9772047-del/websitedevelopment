@@ -21,3 +21,16 @@ test('session expiry is distinguishable from network failure', async () => {
   api.defaults.adapter = async () => { throw { response: { status: 401, data: { message: '请先登录' } } }; };
   await assert.rejects(api.get('/plans'), error => error.status === 401 && error.message === '请先登录');
 });
+
+test('connection failures tell the user which backend to start', async () => {
+  const api = createApi('http://localhost:8080/api');
+  api.defaults.adapter = async () => { throw { code: 'ERR_NETWORK' }; };
+  await assert.rejects(api.get('/auth/current'), error =>
+    error.message.includes('localhost:8080') && error.message.includes('后端'));
+});
+
+test('timeouts are reported separately from an unreachable backend', async () => {
+  const api = createApi('http://localhost:8080/api');
+  api.defaults.adapter = async () => { throw { code: 'ECONNABORTED' }; };
+  await assert.rejects(api.get('/plans'), /超时/);
+});

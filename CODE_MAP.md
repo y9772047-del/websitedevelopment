@@ -242,7 +242,9 @@
 
 ## 实验二：独立 Vue 前端
 
-- `frontend/index.html` → `frontend/src/main.js` → `App.vue`：登录与学习计划 CRUD。`api.js` 负责 Axios、Session 凭证及 Result 错误处理。
-- `frontend/vite.config.js`：独立构建入口；复用原 `static/css/base.css`，不依赖原静态 JS。
+- `frontend/index.html` → `frontend/src/main.js` → `App.vue`：独立 Vue 入口、会话恢复、主题与新旧系统导航。
+- `frontend/src/views/AuthView.vue`：恢复原登录/注册页结构；`PlansView.vue` 与 `components/PlanForm.vue`：学习计划列表、详情、任务只读列表及 CRUD 表单。
+- `frontend/src/api.js`：Axios、Session 凭证、Result 解包及 HTTP/超时/网络错误；`frontend/src/plan.js`：计划字段白名单、长度、状态和日期校验。
+- `frontend/vite.config.js`：独立构建入口；复用原 `static/css/base.css` 和 `auth.css`，不依赖原静态 JS。
 - `WebConfig.apiCorsFilter`：API 跨域白名单，`APP_CORS_ALLOWED_ORIGINS` 可配置。
 - `docs/experiment-2/`：运行说明、OpenAPI 文档和验证记录。

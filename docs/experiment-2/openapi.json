@@ -17,6 +17,43 @@
     }
   ],
   "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "注册普通用户",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "业务成功或失败均可能为 HTTP 200；必须检查 success。成功时返回用户，注册不会自动建立登录 Session。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "无效 JSON 或参数；不保证 Result 结构"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "summary": "已有账号登录",
@@ -312,6 +349,72 @@
           }
         }
       }
+    },
+    "/api/tasks": {
+      "get": {
+        "summary": "查询当前用户的任务",
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["Q0", "Q1", "Q2", "Q3"]
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "只返回当前用户的数据；计划详情使用 planId 过滤并只读展示。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "日期或优先级无效；不保证 Result 结构"
+          },
+          "401": {
+            "description": "未登录，返回 Result，success=false、data=null"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单，可能是纯文本响应"
+          },
+          "500": {
+            "description": "数据库或其他未处理错误；不保证 Result 结构"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -323,6 +426,30 @@
       }
     },
     "schemas": {
+      "RegistrationInput": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "realName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 50
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "maxLength": 100
+          }
+        },
+        "description": "Vue 注册页只提交这三个字段；角色和状态由后端注册逻辑决定。"
+      },
       "PlanInput": {
         "type": "object",
         "required": [
@@ -465,6 +592,76 @@
           }
         }
       },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "planId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taskName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "repeatType": {
+            "type": "string",
+            "nullable": true
+          },
+          "repeatEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "repeatGroupId": {
+            "type": "string",
+            "nullable": true
+          },
+          "reminderEnabled": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "reminderDaysBefore": {
+            "type": "integer",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "Result": {
         "type": "object",
         "required": [
@@ -527,6 +724,29 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Plan"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "TaskListResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
             },
             "nullable": true
           }
