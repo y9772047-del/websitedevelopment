@@ -146,11 +146,13 @@ When splitting frontend JS:
 
 - frontend/index.html loads src/main.js as an ES module; Vite bundles and hashes assets.
 - main.js imports Vue, App.vue, and the existing base.css, auth.css, and app.css.
-- App.vue imports api.js plus AuthView.vue, PlansView.vue, TasksView.vue, and RecordsView.vue; it owns navigation and per-view busy state.
+- App.vue imports api.js and seven lazy-retained business views; it owns navigation and per-view busy state.
 - AuthView.vue owns authentication. PlansView.vue and PlanForm.vue own plan CRUD and detail.
 - TasksView.vue owns task CRUD, filters, repeat/reminder fields, and batch import.
 - RecordsView.vue owns record CRUD and AI improvement suggestions.
-- The phase-two views import pure validation and payload helpers from workflow.js.
+- DashboardView.vue owns metrics, reminders, heatmap and plan-investment charts; StatisticsView.vue owns aggregate metrics and task distributions.
+- CalendarView.vue combines records, monthly deadline tasks and important nodes; ImportantNodesView.vue owns nodes, batch import and keyword rules.
+- workflow.js provides task/record payload helpers; insights.js provides important-node payloads, calendar ranges and statistic derivations.
 - api.js imports Axios and centralizes credentials, Result, HTTP, timeout, and network-error handling.
 - The Vue entry has no window exports, inline handlers, Bootstrap JavaScript, or legacy JavaScript dependencies.
 - The original static page script order and version query strings remain unchanged.

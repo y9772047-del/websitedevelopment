@@ -757,6 +757,471 @@
           }
         }
       }
+    },
+    "/api/dashboard": {
+      "get": {
+        "summary": "查询当前用户仪表盘",
+        "responses": {
+          "200": {
+            "description": "返回当前用户指标、最近任务和最近记录。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/statistics": {
+      "get": {
+        "summary": "查询当前用户学习统计",
+        "responses": {
+          "200": {
+            "description": "返回计划数、任务数、完成率、逾期数和累计学习时长。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatisticsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/calendar": {
+      "get": {
+        "summary": "查询指定月份截止的当前用户任务",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "只返回当前用户在指定月份截止的任务。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/important-nodes": {
+      "get": {
+        "summary": "按年份查询当前用户重要节点",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportantNodeListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建当前用户重要节点",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportantNodeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportantNodeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/important-nodes/batch": {
+      "post": {
+        "summary": "批量创建当前用户重要节点",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ImportantNodeInput"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportantNodeListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/important-nodes/{id}": {
+      "put": {
+        "summary": "修改当前用户重要节点",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportantNodeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除当前用户重要节点",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/important-node-keyword-rules": {
+      "get": {
+        "summary": "查询当前用户关键词规则",
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeywordRuleListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "post": {
+        "summary": "创建当前用户关键词规则",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeywordRuleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeywordRuleResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/important-node-keyword-rules/{id}": {
+      "put": {
+        "summary": "修改当前用户关键词规则",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeywordRuleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除当前用户关键词规则",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1383,6 +1848,367 @@
             "nullable": true
           }
         }
+      },
+      "ImportantNodeInput": {
+        "type": "object",
+        "required": [
+          "title",
+          "type",
+          "startDate"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "考试",
+              "截止",
+              "比赛",
+              "汇报",
+              "其他"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "example": "09:00",
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "example": "18:00",
+            "nullable": true
+          },
+          "planId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "taskId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ImportantNode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "importance": {
+            "type": "string",
+            "enum": [
+              "普通",
+              "重要",
+              "紧急"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "planId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "taskId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "KeywordRuleInput": {
+        "type": "object",
+        "required": [
+          "keyword"
+        ],
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "nodeType": {
+            "type": "string",
+            "enum": [
+              "考试",
+              "截止",
+              "比赛",
+              "汇报",
+              "其他"
+            ],
+            "nullable": true
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "SCORE",
+              "MIN_IMPORTANT",
+              "URGENT"
+            ],
+            "default": "SCORE"
+          },
+          "scoreDelta": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 10
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "KeywordRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "keyword": {
+            "type": "string"
+          },
+          "nodeType": {
+            "type": "string",
+            "nullable": true
+          },
+          "effect": {
+            "type": "string"
+          },
+          "scoreDelta": {
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ImportantNodeResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ImportantNode"
+              }
+            }
+          }
+        ]
+      },
+      "ImportantNodeListResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ImportantNode"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "KeywordRuleResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/KeywordRule"
+              }
+            }
+          }
+        ]
+      },
+      "KeywordRuleListResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/KeywordRule"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "DashboardData": {
+        "type": "object",
+        "properties": {
+          "planCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taskCount": {
+            "type": "integer"
+          },
+          "completedTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "overdueTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "recentTasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "recentRecords": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            }
+          }
+        }
+      },
+      "StatisticsData": {
+        "type": "object",
+        "properties": {
+          "planCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completedTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "overdueTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalDuration": {
+            "type": "integer"
+          }
+        }
+      },
+      "DashboardResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/DashboardData"
+              }
+            }
+          }
+        ]
+      },
+      "StatisticsResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Result"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/StatisticsData"
+              }
+            }
+          }
+        ]
       }
     }
   }
