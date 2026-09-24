@@ -2,7 +2,7 @@
 
 ## 完成范围
 
-后端沿用 Spring Boot @RestController 提供 RESTful JSON。独立 frontend 使用 Vue 3 单文件组件和 Axios，现已覆盖：
+后端沿用 Spring Boot @RestController 提供 RESTful JSON。Vue 3 单文件组件通过 Axios 调用接口；开发时可独立运行 Vite，最终构建由 Spring Boot 在同一端口提供。当前覆盖：
 
 - 登录、注册、退出和刷新后的 Session 恢复。
 - 学习计划列表、详情、新增、修改、删除。
@@ -25,22 +25,21 @@ Vue 复用原 base.css、auth.css、app.css 和 admin.css，不加载原静态 J
 
 需要 Java 17+、Node.js 20.19+ 或 22.12+，以及项目原有 MySQL 数据库和 DB_PASSWORD 环境变量。不要在已有数据库上执行包含 DROP TABLE 的初始化 SQL。
 
-先在仓库根目录启动后端：
+确认 `JAVA_HOME` 指向 JDK 17 或更新版本，并在仓库根目录启动后端：
 
 ~~~powershell
-$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12.1'
 .\mvnw.cmd clean package -DskipTests
 java -jar target/study-plan-system-1.0.0.jar
 ~~~
 
-再开一个终端启动 Vue：
+需要前端热更新时，再开一个终端启动 Vite：
 
 ~~~powershell
-cd D:\websitedevelopment\frontend
+cd frontend
 npm run dev
 ~~~
 
-打开 http://localhost:5173。默认演示账号为 student / 123456；也可以在 Vue 注册页创建普通用户。前后端统一使用 localhost，不要把其中一端改成 127.0.0.1。
+统一部署访问 http://localhost:8080；开发模式访问 http://localhost:5173。默认演示账号为 student / 123456；也可以在 Vue 注册页创建普通用户。开发模式的前后端统一使用 localhost，不要把其中一端改成 127.0.0.1。
 
 如果 frontend/node_modules 不存在，先按 pnpm-lock.yaml 安装依赖：
 
@@ -49,7 +48,7 @@ corepack enable
 pnpm install --frozen-lockfile
 ~~~
 
-生产构建可在 frontend 目录执行 npm run build，再以 npm run preview 查看。产物在 frontend/dist，前后端可以分别部署。Bootstrap CSS 使用 CDN，离线环境需要自行托管。
+在 `frontend/` 执行 `npm run build` 后，产物直接写入 `src/main/resources/static/`；随后重新打包 Spring Boot，即可从同一服务访问 Vue 和 `/api`。构建后的 `index.html` 与带哈希的资源文件须一起提交。Bootstrap CSS 使用 CDN，离线环境需要自行托管。
 
 后端地址可在构建前写入 frontend/.env.local：
 
@@ -89,6 +88,6 @@ openapi.json 是 OpenAPI 3.0.3 文档，覆盖当前 Vue 实际调用的 44 个�
 
 ## Git 与回退
 
-初始实验二提交为 cf14ef7，第一阶段提交为 f180e03，第二阶段提交为 9362f49，第三阶段提交为 60dc63c；第四阶段继续在分支 codex/vue-phase2-tasks-records 上实施。仓库原有未提交文件继续保留，不属于本次迁移。
+原始 HTML 基线为 `96ea080`，完整 Vue 功能提交为 `e582f34`，Spring Boot 统一提供 Vue 的整合提交为 `d1f4f63`。旧静态页面与脚本保留在 Git 历史中；仓库原有未提交文件不属于本次迁移。
 
 Git 只能撤销代码，不能恢复数据库中被删除的数据。撤销已提交迁移时先检查 git status，然后使用 git revert <提交号>；不要对包含个人未提交工作的仓库使用 git reset --hard 或 git clean。

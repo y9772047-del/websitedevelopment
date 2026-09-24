@@ -15,7 +15,7 @@ const planMap = computed(() => Object.fromEntries(plans.value.map(plan => [plan.
 function taskLabel(task) { return (planMap.value[task.planId]?.planName || '未知计划') + ' / ' + task.taskName; }
 function resetForm() { editingId.value = null; Object.assign(form, emptyRecord()); suggestions.value = []; aiTip.value = '填写学习内容和问题与反思后生成改进计划。'; }
 async function run(action) {
-  if (busy.value) return;
+  if (busy.value || aiBusy.value) return;
   busy.value = true; emit('busy-change', true); error.value = ''; message.value = '';
   try { await action(); }
   catch (failure) { if (failure.status === 401) emit('session-expired'); else error.value = failure.message; }
@@ -57,9 +57,9 @@ onMounted(() => run(loadAll));
         <div v-if="suggestions.length" class="col-12"><div class="ai-suggestion-box"><strong>行动建议</strong><ul><li v-for="item in suggestions" :key="item">{{ item }}</li></ul></div></div>
       </div></fieldset></form>
     </section>
-    <section class="content-card"><div class="card-title-row"><h2>记录列表</h2><button class="btn btn-outline-primary btn-sm" :disabled="busy" @click="run(refreshRecords)">刷新</button></div>
+    <section class="content-card"><div class="card-title-row"><h2>记录列表</h2><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy" @click="run(refreshRecords)">刷新</button></div>
       <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>任务</th><th>日期</th><th>时长</th><th>内容</th><th>问题与反思</th><th>改进计划</th><th>完成情况</th><th>操作</th></tr></thead><tbody>
-        <tr v-for="record in records" :key="record.id"><td>{{ taskMap[record.taskId] ? taskLabel(taskMap[record.taskId]) : '未知任务' }}</td><td>{{ record.studyDate }}</td><td>{{ record.duration || 0 }} 分钟</td><td :title="record.content">{{ compact(record.content) }}</td><td :title="record.problems">{{ compact(record.problems) }}</td><td :title="record.improvementPlan">{{ compact(record.improvementPlan) }}</td><td>{{ record.completionStatus }}</td><td><button class="btn btn-sm btn-primary me-2" :disabled="busy" @click="edit(record)">编辑</button><button class="btn btn-sm btn-outline-primary" :disabled="busy" @click="removeRecord(record)">删除</button></td></tr>
+        <tr v-for="record in records" :key="record.id"><td>{{ taskMap[record.taskId] ? taskLabel(taskMap[record.taskId]) : '未知任务' }}</td><td>{{ record.studyDate }}</td><td>{{ record.duration || 0 }} 分钟</td><td :title="record.content">{{ compact(record.content) }}</td><td :title="record.problems">{{ compact(record.problems) }}</td><td :title="record.improvementPlan">{{ compact(record.improvementPlan) }}</td><td>{{ record.completionStatus }}</td><td><button class="btn btn-sm btn-primary me-2" :disabled="busy || aiBusy" @click="edit(record)">编辑</button><button class="btn btn-sm btn-outline-primary" :disabled="busy || aiBusy" @click="removeRecord(record)">删除</button></td></tr>
         <tr v-if="!records.length"><td colspan="8">暂无学习记录</td></tr>
       </tbody></table></div>
     </section>

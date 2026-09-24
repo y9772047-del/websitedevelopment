@@ -31,4 +31,4 @@
 
 ## 验证
 
-在 `frontend/` 执行 `pnpm test`、`pnpm build`；在项目根目录执行 `./mvnw.cmd test` 和 `./mvnw.cmd clean package -DskipTests`。`VueDistributionTest` 检查 Spring Boot 页面入口和旧页面清理结果。
+在 `frontend/` 执行 `pnpm test`、`pnpm build`；在项目根目录执行 `./mvnw.cmd test` 和 `./mvnw.cmd clean package -DskipTests`。`VueDistributionTest` 检查 Vue 首页引用的构建资源是否存在，以及旧页面目录是否已移除。
