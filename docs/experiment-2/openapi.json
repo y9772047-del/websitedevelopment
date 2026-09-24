@@ -758,6 +758,32 @@
         }
       }
     },
+    "/api/ai/generate-weekly-report": {
+      "post": {
+        "summary": "根据当前用户最近 7 天学习记录生成 AI 周报",
+        "responses": {
+          "200": {
+            "description": "必须检查 success；未配置 AI Key 等业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiWeeklyReportResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
     "/api/dashboard": {
       "get": {
         "summary": "查询当前用户仪表盘",
@@ -2376,6 +2402,26 @@
             "$ref": "#/components/schemas/AiImprovementResponse",
             "nullable": true
           }
+        }
+      },
+      "AiWeeklyReportResponse": {
+        "type": "object",
+        "properties": {
+          "weeklySummary": { "type": "string" },
+          "mainProblems": { "type": "string" },
+          "nextWeekSuggestions": { "type": "string" },
+          "suggestedActions": { "type": "array", "items": { "type": "string" } },
+          "generationSource": { "type": "string", "nullable": true },
+          "generationSourceLabel": { "type": "string", "nullable": true },
+          "generationSourceDetail": { "type": "string", "nullable": true }
+        }
+      },
+      "AiWeeklyReportResult": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/AiWeeklyReportResponse", "nullable": true }
         }
       },
       "ImportantNodeInput": {

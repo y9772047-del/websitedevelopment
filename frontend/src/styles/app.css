@@ -1,4 +1,4 @@
-﻿.insight-grid {
+.insight-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr);
     gap: 16px;
@@ -1072,6 +1072,29 @@ body.theme-dark .priority-q3 {
     }
 }
 @media (max-width: 768px) {
+    .dashboard-chart-grid .plan-investment-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-chart-grid .plan-investment-legend-item {
+        grid-template-columns: 12px minmax(0, 1fr) auto auto;
+        gap: 6px;
+    }
+
+    .dashboard-chart-grid .plan-investment-legend-item .plan-investment-progress {
+        grid-column: 2 / -1;
+        grid-row: 2;
+    }
+
+    .dashboard-chart-grid .plan-investment-legend-item strong {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .dashboard-chart-grid .plan-investment-legend-item em {
+        grid-column: 4;
+        grid-row: 1;
+    }
     .app-shell {
         padding: 18px;
     }
