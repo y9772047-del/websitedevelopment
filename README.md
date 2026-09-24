@@ -18,7 +18,7 @@
 ## 运行步骤
 
 1. 确认本机 MySQL 已启动。
-2. 在 MySQL 中执行 `src/main/resources/db/schema.sql`。
+2. 仅在全新数据库中执行 `src/main/resources/db/schema.sql`；该初始化脚本包含 `DROP TABLE`，已有数据时不要重新执行。
 3. 检查 `src/main/resources/application.yml` 中的数据库配置：
 
 ```yaml
@@ -35,9 +35,7 @@ spring:
 
 ## 测试账号
 
-数据库 SQL 会自动插入一个测试账号：
-
-
+全新数据库初始化脚本会插入两个仅供本地演示的账号：`student / 123456` 和 `admin / admin123`。已有数据库的账号以实际数据为准。
 
 ## 页面入口
 
@@ -74,6 +72,11 @@ spring:
 - `study_record`：学习记录表，包含学习过程、问题与反思、改进计划。
 - `important_node`：重要节点表，独立保存考试、截止、比赛、汇报等学习时间点。
 
+## 实验文档
+
+- [实验二：Vue 前后端分离与 RESTful API](docs/experiment-2/README.md)
+- [实验三：Git 协作与持续集成](docs/experiment-3/README.md)
+
 ## 说明
 
-本项目为了课程演示简化了密码处理，数据库中密码为明文保存。正式项目应使用 BCrypt 等方式加密存储密码，并补充更严格的参数校验和异常处理。
+MySQL 连接口令通过 `DB_PASSWORD` 环境变量提供，不写入 `application.yml`。这与登录用户的密码存储是两回事：当前课程示例的 `user.password` 仍由后端直接保存并匹配，初始化 SQL 也使用演示密码。正式部署前应设计存量账号迁移，改用 BCrypt 等密码哈希，并补充更严格的参数校验和异常处理。

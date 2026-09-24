@@ -29,6 +29,11 @@
 - `frontend/src/api.js`：Axios、Session 凭证与错误处理。`plan.js`、`workflow.js`、`insights.js` 和 `portal.js`：表单字段、日期、批量导入、统计与主题规则。
 - `frontend/src/styles/`：原有视觉样式已经迁入 Vue 源码，保留既有外观。
 
+## 持续集成
+
+- `.github/workflows/ci.yml`：按 `frontend/pnpm-lock.yaml` 安装 Vue 依赖，先测试与构建，再执行 Maven `clean verify`。
+- `.github/pull_request_template.md` 与 `docs/experiment-3/`：PR 审查项目及实验三记录。
+
 ## 验证
 
-在 `frontend/` 执行 `pnpm test`、`pnpm build`；在项目根目录执行 `./mvnw.cmd test` 和 `./mvnw.cmd clean package -DskipTests`。`VueDistributionTest` 检查 Spring Boot 页面入口和旧页面清理结果。
+在 `frontend/` 执行 `pnpm test`、`pnpm build`；在项目根目录执行 `./mvnw.cmd test` 和 `./mvnw.cmd clean package -DskipTests`。`VueDistributionTest` 检查 Vue 首页引用的构建资源是否存在，以及旧页面目录是否已移除。
