@@ -4,3 +4,11 @@ target/
 *.log
 新建 文本文档.txt
 application-local.yml
+.vscode/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+start-codex-app-with-proxy.ps1
+websitedevelopment-codex-error-log.md

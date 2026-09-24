@@ -72,6 +72,11 @@ spring:
 - `study_record`：学习记录表，包含学习过程、问题与反思、改进计划。
 - `important_node`：重要节点表，独立保存考试、截止、比赛、汇报等学习时间点。
 
+## 实验文档
+
+- [实验二：Vue 前后端分离与 RESTful API](docs/experiment-2/README.md)
+- [实验三：Git 协作与持续集成](docs/experiment-3/README.md)
+
 ## 说明
 
 MySQL 连接口令通过 `DB_PASSWORD` 环境变量提供，不写入 `application.yml`。这与登录用户的密码存储是两回事：当前课程示例的 `user.password` 仍由后端直接保存并匹配，初始化 SQL 也使用演示密码。正式部署前应设计存量账号迁移，改用 BCrypt 等密码哈希，并补充更严格的参数校验和异常处理。
