@@ -145,14 +145,16 @@ When splitting frontend JS:
 ## Experiment 2 independent Vue entry
 
 - frontend/index.html loads src/main.js as an ES module; Vite bundles and hashes assets.
-- main.js imports Vue, App.vue, and the existing base.css, auth.css, and app.css.
-- App.vue imports api.js and seven lazy-retained business views; it owns navigation and per-view busy state.
+- main.js imports Vue, App.vue, and the existing base.css, auth.css, app.css, and admin.css.
+- App.vue imports api.js and role-aware student/admin views; it owns session restoration, navigation, theme application, and per-view busy state.
 - AuthView.vue owns authentication. PlansView.vue and PlanForm.vue own plan CRUD and detail.
 - TasksView.vue owns task CRUD, filters, repeat/reminder fields, and batch import.
 - RecordsView.vue owns record CRUD and AI improvement suggestions.
 - DashboardView.vue owns metrics, reminders, heatmap and plan-investment charts; StatisticsView.vue owns aggregate metrics and task distributions.
 - CalendarView.vue combines records, monthly deadline tasks and important nodes; ImportantNodesView.vue owns nodes, batch import and keyword rules.
-- workflow.js provides task/record payload helpers; insights.js provides important-node payloads, calendar ranges and statistic derivations.
+- FeedbackView.vue owns student feedback submission/history; ThemeView.vue owns the shared five-theme experience and legacy-compatible localStorage key.
+- AdminPortal.vue owns the role-specific sidebar; AdminDashboardView.vue, AdminUsersView.vue, AdminTasksView.vue, and AdminFeedbacksView.vue own existing administrator REST flows.
+- workflow.js provides task/record payload helpers; insights.js provides important-node payloads, calendar ranges and statistic derivations; portal.js provides feedback, admin-query/status, and theme rules.
 - api.js imports Axios and centralizes credentials, Result, HTTP, timeout, and network-error handling.
 - The Vue entry has no window exports, inline handlers, Bootstrap JavaScript, or legacy JavaScript dependencies.
 - The original static page script order and version query strings remain unchanged.

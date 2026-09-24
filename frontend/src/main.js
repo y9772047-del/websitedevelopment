@@ -3,4 +3,5 @@ import App from './App.vue';
 import '../../src/main/resources/static/css/base.css';
 import '../../src/main/resources/static/css/auth.css';
 import '../../src/main/resources/static/css/app.css';
+import '../../src/main/resources/static/css/admin.css';
 createApp(App).mount('#app');

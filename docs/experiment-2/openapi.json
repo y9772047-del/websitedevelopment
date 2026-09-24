@@ -3,7 +3,7 @@
   "info": {
     "title": "学习计划系统 · 实验二接口",
     "version": "1.0.0",
-    "description": "按现有 Controller、Entity、Result 与数据库字段核对。范围为实验二使用的登录及学习计划接口，不代表全部系统 API。"
+    "description": "按现有 Controller、Entity、Result 与数据库字段核对。覆盖实验二独立 Vue 前端使用的学生端与管理员端 RESTful JSON 接口。"
   },
   "servers": [
     {
@@ -1222,6 +1222,535 @@
           }
         }
       }
+    },
+    "/api/feedback": {
+      "post": {
+        "summary": "提交当前用户反馈",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/feedback/my": {
+      "get": {
+        "summary": "查询当前用户提交的反馈",
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/dashboard/stats": {
+      "get": {
+        "summary": "管理员后台统计与最近动态",
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboardResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "管理员查询用户",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "get": {
+        "summary": "管理员查询用户详情",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserDetailResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{id}/status": {
+      "put": {
+        "summary": "管理员启用或禁用普通用户",
+        "description": "不能禁用管理员账号或当前管理员自己。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserStatusInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/tasks": {
+      "get": {
+        "summary": "管理员筛选全部用户的学习任务",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminTaskListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/tasks/{id}": {
+      "get": {
+        "summary": "管理员查询任务详情",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminTaskResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "delete": {
+        "summary": "管理员删除任务及其关联学习记录",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/feedbacks": {
+      "get": {
+        "summary": "管理员筛选用户反馈",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminFeedbackListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/admin/feedbacks/{id}": {
+      "get": {
+        "summary": "管理员查询反馈详情",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminFeedbackResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
+      "put": {
+        "summary": "管理员处理反馈",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDecisionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success；业务失败也可能返回 HTTP 200。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数或 JSON 无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "无管理员权限或来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2209,6 +2738,510 @@
             }
           }
         ]
+      },
+      "FeedbackInput": {
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Feedback": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "content": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "未处理",
+              "已处理",
+              "已忽略"
+            ]
+          },
+          "reply": {
+            "type": "string",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "FeedbackResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Feedback",
+            "nullable": true
+          }
+        }
+      },
+      "FeedbackListResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Feedback"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "UserStatusInput": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "FeedbackDecisionInput": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "未处理",
+              "已处理",
+              "已忽略"
+            ]
+          },
+          "reply": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AdminUserRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "taskCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AdminUserDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "realName": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "taskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completedTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unfinishedTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "overdueTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recentTasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          }
+        }
+      },
+      "AdminUserListResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserRow"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "AdminUserDetailResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminUserDetail",
+            "nullable": true
+          }
+        }
+      },
+      "AdminTaskRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taskName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "planId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "planName": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AdminTaskResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminTaskRow",
+            "nullable": true
+          }
+        }
+      },
+      "AdminTaskListResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTaskRow"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "AdminFeedbackRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "content": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "未处理",
+              "已处理",
+              "已忽略"
+            ]
+          },
+          "reply": {
+            "type": "string",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "AdminFeedbackResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminFeedbackRow",
+            "nullable": true
+          }
+        }
+      },
+      "AdminFeedbackListResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminFeedbackRow"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "AdminDashboardData": {
+        "type": "object",
+        "properties": {
+          "userCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taskCount": {
+            "type": "integer"
+          },
+          "finishedTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unfinishedTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "overdueTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "todayNewTaskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "feedbackCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pendingFeedbackCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "recentUsers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "recentFeedbacks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Feedback"
+            }
+          }
+        }
+      },
+      "AdminDashboardResult": {
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminDashboardData",
+            "nullable": true
+          }
+        }
       }
     }
   }

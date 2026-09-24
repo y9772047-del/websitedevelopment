@@ -247,7 +247,9 @@
 - TasksView.vue：任务 CRUD、筛选、重复/提醒设置和批量导入；RecordsView.vue：记录 CRUD 与 AI 改进建议。
 - DashboardView.vue 与 StatisticsView.vue：首页指标、热力图、计划投入和任务分布；CalendarView.vue：记录、截止任务和重要节点日历联动。
 - ImportantNodesView.vue：重要节点 CRUD、批量导入、计划/任务关联和关键词规则。
-- api.js：Axios、Session 凭证与错误处理；plan.js、workflow.js 和 insights.js：字段白名单、日期、批量导入、日历与统计校验。
-- vite.config.js：独立构建入口；复用原 base.css、auth.css 和 app.css，不依赖原静态 JS。
+- FeedbackView.vue 与 ThemeView.vue：学生反馈、处理结果和五套主题；主题继续使用 theme_<用户ID> 本地键。
+- AdminPortal.vue 及 Admin*View.vue：管理员首页、用户状态、全局任务、反馈处理和主题，管理员不再跳转旧页面。
+- api.js：Axios、Session 凭证与错误处理；plan.js、workflow.js、insights.js 和 portal.js：字段白名单、日期、批量导入、日历、统计、反馈、后台筛选和主题校验。
+- vite.config.js：独立构建入口；复用原 base.css、auth.css、app.css 和 admin.css，不依赖原静态 JS。
 - WebConfig.apiCorsFilter：API 跨域白名单，APP_CORS_ALLOWED_ORIGINS 可配置。
 - docs/experiment-2/：运行说明、OpenAPI 文档和验证记录。
