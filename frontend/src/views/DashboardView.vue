@@ -4,7 +4,7 @@ import { buildDashboardHeatmap, buildDashboardReminders, calculatePlanInvestment
 
 const props = defineProps({ api: { type: Function, required: true } });
 const emit = defineEmits(['session-expired', 'busy-change']);
-const dashboard = ref({}), statistics = ref({}), plans = ref([]), tasks = ref([]), records = ref([]);
+const dashboard = ref({}), plans = ref([]), tasks = ref([]), records = ref([]);
 const busy = ref(false), error = ref(''), investmentRange = ref('30'), heatmapFilter = ref('全部');
 const heatmapFilters = ['全部', '课业完成型', '成绩提升型', '成长拓展型', '综合提升型'];
 const colors = ['#f05f7d','#5fbf8f','#f4a62a','#5c8df6','#9b70d9','#42b8c6','#e66bb5','#7a9a3f'];
@@ -41,15 +41,6 @@ const donutStyle = computed(() => {
     return colors[index % colors.length] + ' ' + start + '% ' + cursor + '%';
   }).join(',') + ')' };
 });
-const statusColors = { '已完成':'var(--success)', '进行中':'var(--primary)', '未完成':'var(--warning)', '延期':'var(--danger)' };
-const priorityColors = { Q0:'var(--danger)', Q1:'var(--primary)', Q2:'#5b8def', Q3:'#64748b' };
-function chartRows(counts, keys, palette) {
-  const values = keys.map(label => ({ label, value: counts[label] || 0, color: palette[label] }));
-  const maximum = Math.max(1, ...values.map(row => row.value));
-  return values.filter(row => row.value > 0).map(row => ({ ...row, width: Math.max(8, Math.round(row.value * 100 / maximum)) }));
-}
-const statusRows = computed(() => chartRows(summary.value.statusCounts, ['已完成','进行中','未完成','延期'], statusColors));
-const priorityRows = computed(() => chartRows(summary.value.priorityCounts, ['Q0','Q1','Q2','Q3'], priorityColors));
 function compact(value, limit = 78) { const text = String(value || ''); return text.length > limit ? text.slice(0, limit) + '…' : text; }
 function taskName(id) { return taskMap.value[id]?.taskName || '未知任务'; }
 function planName(id) { return planMap.value[id]?.planName || '未关联计划'; }
@@ -66,8 +57,8 @@ async function run(action) {
   finally { busy.value = false; emit('busy-change', false); }
 }
 async function loadAll() {
-  [dashboard.value, statistics.value, plans.value, tasks.value, records.value] = await Promise.all([
-    props.api.get('/dashboard'), props.api.get('/statistics'), props.api.get('/plans'), props.api.get('/tasks'), props.api.get('/records')
+  [dashboard.value, plans.value, tasks.value, records.value] = await Promise.all([
+    props.api.get('/dashboard'), props.api.get('/plans'), props.api.get('/tasks'), props.api.get('/records')
   ]);
 }
 defineExpose({ refresh: () => run(loadAll) });
@@ -78,7 +69,7 @@ onMounted(() => run(loadAll));
   <main class="container-fluid app-shell">
     <header class="page-heading"><div><span class="soft-label">Dashboard</span><h1 class="page-title">首页 / 仪表盘</h1></div><button class="btn btn-outline-primary btn-sm" :disabled="busy" @click="run(loadAll)">刷新</button></header>
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
-    <section class="row g-3 mb-4">
+    <section class="row g-3 mb-4 dashboard-metrics">
       <div v-for="item in [
         ['计划总数', dashboard.planCount || 0], ['任务总数', dashboard.taskCount || 0],
         ['已完成任务', dashboard.completedTaskCount || 0], ['逾期任务', dashboard.overdueTaskCount || 0]
@@ -111,11 +102,5 @@ onMounted(() => run(loadAll));
       <div class="col-lg-6"><div class="content-card"><h2>最近学习记录</h2><div class="stack-list"><div v-for="record in (dashboard.recentRecords || [])" :key="record.id" class="list-row"><div><h3>{{ taskName(record.taskId) }}</h3><p>{{ record.studyDate }} · {{ record.duration || 0 }} 分钟</p><p v-if="record.improvementPlan">改进计划：{{ compact(record.improvementPlan,54) }}</p></div></div><div v-if="!(dashboard.recentRecords || []).length" class="list-row"><p>暂无学习记录。</p></div></div></div></div>
     </section>
 
-    <section class="content-card"><div class="card-title-row"><div><h2>学习统计</h2><p class="muted-text mb-0">计划、任务和学习投入概览。</p></div></div>
-      <div class="row g-3 mb-4"><div v-for="item in [['计划数量', statistics.planCount || 0],['任务数量',statistics.taskCount || 0],['已完成任务',statistics.completedTaskCount || 0],['累计学习时长',(statistics.totalDuration || 0) + ' 分钟']]" :key="item[0]" class="col-sm-6 col-xl-3"><div class="metric-card"><span>{{ item[0] }}</span><strong>{{ item[1] }}</strong></div></div></div>
-      <div class="row g-4"><div class="col-lg-4"><div class="content-card stat-summary-card"><h2>任务完成率</h2><strong>{{ statistics.completionRate || 0 }}%</strong><p class="muted-text">已完成 {{ statistics.completedTaskCount || 0 }} / {{ statistics.taskCount || 0 }}</p><div class="progress stat-progress"><div class="progress-bar" :style="{ width: (statistics.completionRate || 0) + '%' }">{{ statistics.completionRate || 0 }}%</div></div></div></div>
-        <div v-for="chart in [{ title:'任务状态分布', rows:statusRows }, { title:'优先级分布', rows:priorityRows }]" :key="chart.title" class="col-lg-4"><div class="content-card"><h2>{{ chart.title }}</h2><div class="mini-chart"><div v-for="row in chart.rows" :key="row.label" class="mini-chart-row"><span class="mini-chart-label">{{ row.label }}</span><span class="mini-chart-track"><i class="mini-chart-bar" :style="{ width: row.width + '%', background: row.color }"></i></span><span class="mini-chart-value">{{ row.value }}</span></div><p v-if="!chart.rows.length" class="mini-chart-empty">暂无可视化数据</p></div></div></div>
-      </div>
-    </section>
   </main>
 </template>

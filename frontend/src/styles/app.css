@@ -4,6 +4,15 @@
     gap: 16px;
 }
 
+.dashboard-metrics .metric-card span {
+    font-weight: 600;
+}
+
+.dashboard-metrics .metric-card strong {
+    font-size: 32px;
+    font-weight: 800;
+}
+
 .dashboard-focus-card {
     min-height: 154px;
     padding: 18px;
@@ -32,7 +41,8 @@
 .dashboard-focus-card strong {
     display: block;
     color: var(--title);
-    font-size: 30px;
+    font-size: 32px;
+    font-weight: 800;
     line-height: 1.1;
 }
 
@@ -403,69 +413,6 @@
     color: var(--muted);
     background: var(--primary-soft);
 }
-
-.stat-summary-card strong {
-    display: block;
-    color: var(--title);
-    font-size: 42px;
-    line-height: 1;
-}
-
-.stat-summary-card p {
-    margin: 10px 0 14px;
-}
-
-.stat-progress {
-    height: 18px;
-}
-
-.mini-chart {
-    display: grid;
-    gap: 12px;
-}
-
-.mini-chart-row {
-    display: grid;
-    grid-template-columns: 74px minmax(0, 1fr) 38px;
-    align-items: center;
-    gap: 10px;
-    color: var(--text);
-    font-size: 13px;
-}
-
-.mini-chart-label {
-    overflow: hidden;
-    color: var(--title);
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.mini-chart-track {
-    height: 10px;
-    border-radius: 999px;
-    background: var(--primary-soft);
-    overflow: hidden;
-}
-
-.mini-chart-bar {
-    height: 100%;
-    min-width: 4px;
-    border-radius: inherit;
-    background: var(--primary);
-}
-
-.mini-chart-value {
-    color: var(--muted);
-    text-align: right;
-}
-
-.mini-chart-empty {
-    margin: 0;
-    color: var(--muted);
-    font-size: 14px;
-}
-
 
 .batch-help-card {
     margin: 4px 0 18px;
@@ -1119,10 +1066,6 @@ body.theme-dark .priority-q3 {
     .category-heatmap-filters {
         align-items: flex-start;
         justify-content: flex-start;
-    }
-
-    .mini-chart-row {
-        grid-template-columns: 68px minmax(0, 1fr) 34px;
     }
 
     .calendar-grid {

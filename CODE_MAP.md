@@ -22,7 +22,7 @@
 - `frontend/src/App.vue`：会话恢复、角色入口、导航和主题。
 - `frontend/src/views/AuthView.vue`：登录和注册。
 - `PlansView.vue` 与 `components/PlanForm.vue`：计划；`TasksView.vue`：任务；`RecordsView.vue`：学习记录、AI 改进建议和周报。
-- `DashboardView.vue`：首页指标、焦点提醒、分类热力图、投入分布及已并入首页的学习统计。
+- `DashboardView.vue`：首页指标、焦点提醒、分类热力图及投入分布；重复的学习统计区块已移除。
 - `CalendarView.vue` 与 `ImportantNodesView.vue`：日历、重要节点和关键词规则。
 - `FeedbackView.vue`、`ThemeView.vue`：意见反馈和主题。
 - `AdminPortal.vue` 与 `Admin*View.vue`：管理员页面。
