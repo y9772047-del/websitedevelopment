@@ -14,7 +14,7 @@ import ImportantNodesView from './views/ImportantNodesView.vue';
 import FeedbackView from './views/FeedbackView.vue';
 import ThemeView from './views/ThemeView.vue';
 
-const api = createApi(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api');
+const api = createApi(import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8080/api' : '/api'));
 const user = ref(null), ready = ref(false), logoutBusy = ref(false), message = ref(''), navOpen = ref(false), currentView = ref('dashboard');
 const dashboardView = ref(null), plansView = ref(null), tasksView = ref(null), recordsView = ref(null);
 const statisticsView = ref(null), calendarView = ref(null), importantNodesView = ref(null), feedbackView = ref(null), themeView = ref(null);

@@ -1,6 +1,6 @@
 # 大学生学习计划管理系统 MVP
 
-本项目是软件工程课程项目 MVP，技术栈为 Spring Boot + Maven + MySQL + MyBatis-Plus，前端使用 HTML + CSS + JavaScript + Bootstrap 5 CDN。
+本项目是软件工程课程项目 MVP，技术栈为 Spring Boot + Maven + MySQL + MyBatis-Plus，前端使用 Vue 3、Vite、Axios 和 Bootstrap 5 CDN。Vue 构建资源由 Spring Boot 统一提供。
 
 ## 本次模块调整说明
 
@@ -28,9 +28,10 @@ spring:
     username: root
 ```
 
-4. 使用 IntelliJ IDEA 打开项目，等待 Maven 依赖下载完成。
-5. 运行 `com.example.studyplan.StudyPlanSystemApplication`。
-6. 浏览器访问 `http://localhost:8080`。
+4. 已提交的 `src/main/resources/static` 包含 Vue 构建结果；如修改了 `frontend/`，先在该目录运行 `pnpm install --frozen-lockfile` 和 `pnpm build`。`pnpm build` 会更新 Spring Boot 的静态资源。`npm install` 和 `npm run build` 也可用于本地构建。
+5. 使用 IntelliJ IDEA 打开项目，等待 Maven 依赖下载完成。
+6. 设置环境变量 `DB_PASSWORD`，然后运行 `com.example.studyplan.StudyPlanSystemApplication`。
+7. 浏览器访问 `http://localhost:8080`。开发模式可在 `frontend/` 运行 `pnpm dev`，访问 `http://localhost:5173`；API 默认连接 `http://localhost:8080/api`。
 
 ## 测试账号
 
@@ -41,7 +42,7 @@ spring:
 ## 页面入口
 
 - 登录页：`http://localhost:8080`
-- 系统主页：`http://localhost:8080/pages/app.html`
+- 学生端和管理端：登录后由 Vue 在同一页面按账号角色显示，入口都是 `http://localhost:8080`。
 - 进入系统后，通过顶部导航访问：
   - 首页
   - 学习计划
@@ -62,7 +63,7 @@ spring:
 - 首页仪表盘展示计划数、任务数、已完成任务数、延期任务数、最近任务、最近学习记录。
 - 学习日历按学习记录日期展示真实学习情况，并可同时显示重要节点。
 - 重要节点独立管理考试、截止、比赛、汇报等一年内的重要学习时间点，支持单个新增、编辑、删除和批量导入。
-- 学习统计页面代码暂时保留，但当前顶部导航不显示该入口。
+- 学习统计页面由 Vue 提供，顶部导航可进入。
 - 主题皮肤中心支持 5 套内置主题，并保存到 localStorage。
 
 ## 数据库表
