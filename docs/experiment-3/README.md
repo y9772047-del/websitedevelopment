@@ -36,6 +36,10 @@ cd ..
 
 若本机没有设置 `JAVA_HOME`，先在当前终端将它指向已安装的 JDK。Maven 单元和静态资源测试不要求真实数据库或 DeepSeek Key；它们不能替代数据库、浏览器及外部 AI 的完整端到端验收。
 
+## 已完成的 GitHub 证据
+
+实验二 Vue 整合通过 [PR #1](https://github.com/y9772047-del/websitedevelopment/pull/1) 合入 `main`；[合并后的 Actions](https://github.com/y9772047-del/websitedevelopment/actions/runs/35950272738) 中 Java 17 和 21 两组检查均成功。本次原版页面回归修正尚未包含在该 PR 和运行中，应以新的提交与检查单独记录。
+
 ## 证据与审查
 
 实验二最终整合时，本机 Vue 测试 27 项通过，Maven 测试 34 项通过，并完成构建资源、角色权限和部分浏览器联调。旧静态版曾有 49 项测试，那是历史版本，不能作为当前 Vue 版的测试数量。远程 PR、审查意见、Actions 运行和合并结果应以实际 GitHub 链接与页面为准，不能把本地成功当作远程成功。课程报告可附提交图、PR 差异、Actions 结果及测试报告；如另做合并冲突练习，应保存真实操作记录。

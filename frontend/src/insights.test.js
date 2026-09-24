@@ -96,3 +96,48 @@ test('plan investment ignores records outside the range and resolves task-plan r
     '2026-09-01'
   ), [{ planId: 3, label: '实验二', minutes: 40, percent: 100 }]);
 });
+test('dashboard reminders only include overdue, today and next three days', () => {
+  assert.equal(typeof insights.buildDashboardReminders, 'function');
+  assert.deepEqual(insights.buildDashboardReminders([
+    { id: 1, status: '已完成', deadline: '2026-09-20' },
+    { id: 2, status: '进行中', deadline: '2026-09-22' },
+    { id: 3, status: '未完成', deadline: '2026-09-24' },
+    { id: 4, status: '进行中', deadline: '2026-09-27' },
+    { id: 5, status: '进行中', deadline: '2026-09-28' }
+  ], '2026-09-24').map(row => [row.task.id, row.label]), [
+    [2, '已逾期'], [3, '今日待办'], [4, '3 天内截止']
+  ]);
+});
+
+test('dashboard heatmap keeps the original 180-day category range and week alignment', () => {
+  assert.equal(typeof insights.buildDashboardHeatmap, 'function');
+  const cells = insights.buildDashboardHeatmap([
+    { studyDate: '2026-09-24', taskId: 1, duration: 70 },
+    { studyDate: '2026-09-24', taskId: 2, duration: 30 }
+  ], [{ id: 1, category: '课程进度' }, { id: 2, category: '竞赛科研' }], '课业完成型', '2026-09-24');
+  assert.equal(cells.filter(cell => cell.inRange).length, 180);
+  assert.equal(cells.length % 7, 0);
+  assert.equal(cells[0].weekdayIndex, 0);
+  assert.equal(cells.find(cell => cell.date === '2026-09-24').minutes, 70);
+});
+
+test('important nodes retain original month grouping and start-time order', () => {
+  assert.equal(typeof insights.groupImportantNodesByMonth, 'function');
+  const groups = insights.groupImportantNodesByMonth([
+    { id: 1, startDate: '2026-10-03', startTime: '09:00' },
+    { id: 2, startDate: '2026-09-21', startTime: '16:00' },
+    { id: 3, startDate: '2026-09-21', startTime: '08:00' }
+  ]);
+  assert.deepEqual(groups.map(group => [group.month, group.nodes.map(node => node.id)]), [
+    [9, [3, 2]], [10, [1]]
+  ]);
+});
+test('important node date range includes years when it crosses New Year', () => {
+  assert.equal(typeof insights.formatImportantNodeDateTime, 'function');
+  assert.equal(insights.formatImportantNodeDateTime({
+    startDate: '2026-12-30', startTime: '09:00', endDate: '2027-01-02', endTime: '18:00'
+  }), '2026.12.30 09:00 ~ 2027.01.02 18:00');
+  assert.equal(insights.formatImportantNodeDateTime({
+    startDate: '2026-09-24', startTime: '09:00', endDate: '2026-09-24', endTime: '11:00'
+  }), '09.24 09:00-11:00');
+});

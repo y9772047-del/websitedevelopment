@@ -5,7 +5,8 @@ import { buildRecordAiRequest, prepareRecord } from '../workflow.js';
 const props = defineProps({ api: { type: Function, required: true } });
 const emit = defineEmits(['session-expired', 'busy-change']);
 const tasks = ref([]), plans = ref([]), records = ref([]);
-const busy = ref(false), aiBusy = ref(false), error = ref(''), message = ref('');
+const busy = ref(false), aiBusy = ref(false), weeklyBusy = ref(false), error = ref(''), message = ref('');
+const weeklyReport = ref(null), weeklyError = ref('');
 const editingId = ref(null), suggestions = ref([]), aiTip = ref('填写学习内容和问题与反思后生成改进计划。');
 const today = () => new Date().toLocaleDateString('en-CA');
 const emptyRecord = () => ({ taskId: '', studyDate: today(), duration: 0, content: '', completionStatus: '部分完成', problems: '', improvementPlan: '' });
@@ -15,7 +16,7 @@ const planMap = computed(() => Object.fromEntries(plans.value.map(plan => [plan.
 function taskLabel(task) { return (planMap.value[task.planId]?.planName || '未知计划') + ' / ' + task.taskName; }
 function resetForm() { editingId.value = null; Object.assign(form, emptyRecord()); suggestions.value = []; aiTip.value = '填写学习内容和问题与反思后生成改进计划。'; }
 async function run(action) {
-  if (busy.value || aiBusy.value) return;
+  if (busy.value || aiBusy.value || weeklyBusy.value) return;
   busy.value = true; emit('busy-change', true); error.value = ''; message.value = '';
   try { await action(); }
   catch (failure) { if (failure.status === 401) emit('session-expired'); else error.value = failure.message; }
@@ -27,7 +28,7 @@ function edit(record) { editingId.value = record.id; Object.assign(form, emptyRe
 function save() { return run(async () => { const payload = prepareRecord(form); if (editingId.value) await props.api.put('/records/' + editingId.value, payload); else await props.api.post('/records', payload); message.value = editingId.value ? '学习记录已修改' : '学习记录已保存'; resetForm(); records.value = await props.api.get('/records'); }); }
 function removeRecord(record) { if (!window.confirm('删除这条学习记录？此操作不可撤销。')) return; return run(async () => { await props.api.delete('/records/' + record.id); if (editingId.value === record.id) resetForm(); message.value = '学习记录已删除'; records.value = await props.api.get('/records'); }); }
 async function generateAi() {
-  if (busy.value || aiBusy.value) return;
+  if (busy.value || aiBusy.value || weeklyBusy.value) return;
   const payload = buildRecordAiRequest(form, tasks.value, plans.value);
   if (!payload.taskName) { aiTip.value = '请先选择学习任务。'; return; }
   if (!payload.studyContent && !payload.problems) { aiTip.value = '请先填写学习内容，或写下问题与反思。'; return; }
@@ -35,6 +36,13 @@ async function generateAi() {
   try { const result = await props.api.post('/ai/generate-improvement', payload); form.improvementPlan = result?.improvementPlan || ''; suggestions.value = Array.isArray(result?.suggestedActions) ? result.suggestedActions.filter(Boolean) : []; aiTip.value = '已生成（来源：' + (result?.generationSourceLabel || '未知来源') + '），请检查后保存。'; }
   catch (failure) { if (failure.status === 401) emit('session-expired'); else error.value = failure.message; }
   finally { aiBusy.value = false; emit('busy-change', false); }
+}
+async function generateWeeklyReport() {
+  if (busy.value || aiBusy.value || weeklyBusy.value) return;
+  weeklyBusy.value = true; emit('busy-change', true); weeklyError.value = ''; weeklyReport.value = null;
+  try { weeklyReport.value = await props.api.post('/ai/generate-weekly-report'); }
+  catch (failure) { if (failure.status === 401) emit('session-expired'); else weeklyError.value = failure.message; }
+  finally { weeklyBusy.value = false; emit('busy-change', false); }
 }
 function compact(value) { const text = String(value || ''); return text.length > 30 ? text.slice(0, 30) + '…' : text || '—'; }
 defineExpose({ refresh: () => run(loadAll) });
@@ -45,7 +53,7 @@ onMounted(() => run(loadAll));
     <header class="page-heading"><div><span class="soft-label">Records</span><h1 class="page-title">学习记录管理</h1></div></header>
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p><p v-if="message" class="alert alert-success" role="status">{{ message }}</p>
     <section class="content-card mb-4"><h2>{{ editingId ? '编辑学习记录' : '记录表单' }}</h2>
-      <form class="row g-3" @submit.prevent="save"><fieldset class="contents-fieldset" :disabled="busy || aiBusy"><div class="row g-3">
+      <form class="row g-3" @submit.prevent="save"><fieldset class="contents-fieldset" :disabled="busy || aiBusy || weeklyBusy"><div class="row g-3">
         <div class="col-md-3"><label class="form-label">学习任务</label><select v-model="form.taskId" class="form-select" required><option value="">请选择学习任务</option><option v-for="task in tasks" :key="task.id" :value="String(task.id)">{{ taskLabel(task) }}</option></select></div>
         <div class="col-md-3"><label class="form-label">学习日期</label><input v-model="form.studyDate" class="form-control" type="date" required></div>
         <div class="col-md-3"><label class="form-label">学习时长（分钟）</label><input v-model="form.duration" class="form-control" type="number" min="0"></div>
@@ -57,9 +65,12 @@ onMounted(() => run(loadAll));
         <div v-if="suggestions.length" class="col-12"><div class="ai-suggestion-box"><strong>行动建议</strong><ul><li v-for="item in suggestions" :key="item">{{ item }}</li></ul></div></div>
       </div></fieldset></form>
     </section>
-    <section class="content-card"><div class="card-title-row"><h2>记录列表</h2><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy" @click="run(refreshRecords)">刷新</button></div>
+    <section class="content-card mb-4"><div class="card-title-row"><div><h2>AI 周报</h2><p class="muted-text mb-0">根据最近 7 天学习记录生成总结、问题和下周建议。</p></div><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy || weeklyBusy" @click="generateWeeklyReport">{{ weeklyBusy ? '生成中…' : '生成 AI 周报' }}</button></div>
+      <div class="stack-list"><div v-if="weeklyBusy" class="list-row"><p>DeepSeek 正在生成周报，请稍候。</p></div><div v-else-if="weeklyError" class="list-row"><p role="alert">{{ weeklyError }}</p></div><template v-else-if="weeklyReport"><div class="list-row"><div><h3>本周总结</h3><p>{{ weeklyReport.weeklySummary || '暂无总结' }}</p></div></div><div class="list-row"><div><h3>主要问题</h3><p>{{ weeklyReport.mainProblems || '暂无明确问题' }}</p></div></div><div class="list-row"><div><h3>下周建议</h3><p>{{ weeklyReport.nextWeekSuggestions || '暂无建议' }}</p></div></div><div class="list-row"><div><h3>行动清单</h3><p>{{ (weeklyReport.suggestedActions || []).join('；') || '暂无行动清单' }}</p></div><span class="badge status-doing">{{ weeklyReport.generationSourceLabel || 'DeepSeek' }}</span></div></template><div v-else class="list-row"><p>点击按钮生成本周学习报告。</p></div></div>
+    </section>
+    <section class="content-card"><div class="card-title-row"><h2>记录列表</h2><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy || weeklyBusy" @click="run(refreshRecords)">刷新</button></div>
       <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>任务</th><th>日期</th><th>时长</th><th>内容</th><th>问题与反思</th><th>改进计划</th><th>完成情况</th><th>操作</th></tr></thead><tbody>
-        <tr v-for="record in records" :key="record.id"><td>{{ taskMap[record.taskId] ? taskLabel(taskMap[record.taskId]) : '未知任务' }}</td><td>{{ record.studyDate }}</td><td>{{ record.duration || 0 }} 分钟</td><td :title="record.content">{{ compact(record.content) }}</td><td :title="record.problems">{{ compact(record.problems) }}</td><td :title="record.improvementPlan">{{ compact(record.improvementPlan) }}</td><td>{{ record.completionStatus }}</td><td><button class="btn btn-sm btn-primary me-2" :disabled="busy || aiBusy" @click="edit(record)">编辑</button><button class="btn btn-sm btn-outline-primary" :disabled="busy || aiBusy" @click="removeRecord(record)">删除</button></td></tr>
+        <tr v-for="record in records" :key="record.id"><td>{{ taskMap[record.taskId] ? taskLabel(taskMap[record.taskId]) : '未知任务' }}</td><td>{{ record.studyDate }}</td><td>{{ record.duration || 0 }} 分钟</td><td :title="record.content">{{ compact(record.content) }}</td><td :title="record.problems">{{ compact(record.problems) }}</td><td :title="record.improvementPlan">{{ compact(record.improvementPlan) }}</td><td>{{ record.completionStatus }}</td><td><button class="btn btn-sm btn-primary me-2" :disabled="busy || aiBusy || weeklyBusy" @click="edit(record)">编辑</button><button class="btn btn-sm btn-outline-primary" :disabled="busy || aiBusy || weeklyBusy" @click="removeRecord(record)">删除</button></td></tr>
         <tr v-if="!records.length"><td colspan="8">暂无学习记录</td></tr>
       </tbody></table></div>
     </section>

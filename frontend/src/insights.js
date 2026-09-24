@@ -184,3 +184,80 @@ export function calculatePlanInvestment(records = [], tasks = [], plans = [], st
     }))
     .sort((left, right) => right.minutes - left.minutes);
 }
+const HEATMAP_CATEGORIES = {
+  '课业完成型': ['课程进度', '作业实验'],
+  '成绩提升型': ['考试备考', '复盘总结'],
+  '成长拓展型': ['竞赛科研', '专业能力'],
+  '综合提升型': ['自我提升']
+};
+
+export function buildDashboardReminders(tasks = [], today = isoDate(new Date())) {
+  const todayTime = Date.parse(today + 'T00:00:00Z');
+  return tasks.flatMap(task => {
+    if (task.status === '已完成' || !/^\d{4}-\d{2}-\d{2}$/.test(text(task.deadline))) return [];
+    const days = Math.round((Date.parse(task.deadline + 'T00:00:00Z') - todayTime) / 86400000);
+    if (!Number.isFinite(days) || days > 3) return [];
+    return [{ task, days, label: days < 0 ? '已逾期' : days === 0 ? '今日待办' : days + ' 天内截止',
+      className: days < 0 ? 'status-delay' : days === 0 ? 'status-waiting' : 'status-doing' }];
+  }).sort((left, right) => Math.sign(left.days) - Math.sign(right.days)
+    || String(left.task.deadline).localeCompare(String(right.task.deadline))).slice(0, 6);
+}
+
+export function buildDashboardHeatmap(records = [], tasks = [], filter = '全部', today = isoDate(new Date())) {
+  const end = Date.parse(today + 'T00:00:00Z');
+  const start = end - 179 * 86400000;
+  const firstWeekday = (new Date(start).getUTCDay() + 6) % 7;
+  const displayStart = start - firstWeekday * 86400000;
+  const lastWeekday = (new Date(end).getUTCDay() + 6) % 7;
+  const displayEnd = end + (6 - lastWeekday) * 86400000;
+  const taskMap = new Map(tasks.map(task => [String(task.id), task]));
+  const allowed = HEATMAP_CATEGORIES[filter];
+  const totals = new Map();
+  records.forEach(record => {
+    const time = Date.parse(text(record.studyDate) + 'T00:00:00Z');
+    if (!Number.isFinite(time) || time < start || time > end) return;
+    const category = taskMap.get(String(record.taskId))?.category || '其他任务';
+    if (allowed && !allowed.includes(category)) return;
+    const current = totals.get(record.studyDate) || { minutes: 0, count: 0 };
+    current.minutes += Number(record.duration) || 0;
+    current.count++;
+    totals.set(record.studyDate, current);
+  });
+  const cells = [];
+  for (let time = displayStart; time <= displayEnd; time += 86400000) {
+    const date = isoDate(new Date(time));
+    const inRange = time >= start && time <= end;
+    const current = inRange ? totals.get(date) : null;
+    const minutes = current?.minutes || 0;
+    cells.push({ date, weekdayIndex: (new Date(time).getUTCDay() + 6) % 7, inRange,
+      minutes, count: current?.count || 0,
+      level: !minutes ? 0 : minutes <= 60 ? 1 : minutes <= 120 ? 2 : minutes <= 240 ? 3 : minutes <= 360 ? 4 : 5 });
+  }
+  return cells;
+}
+
+export function formatImportantNodeDateTime(node) {
+  const startDate = text(node.startDate);
+  if (!startDate) return '';
+  const endDate = text(node.endDate);
+  const crossYear = Boolean(endDate && startDate.slice(0, 4) !== endDate.slice(0, 4));
+  const dateLabel = value => crossYear ? value.replaceAll('-', '.') : value.slice(5).replace('-', '.');
+  const startTime = text(node.startTime).slice(0, 5);
+  const endTime = text(node.endTime).slice(0, 5);
+  const start = dateLabel(startDate) + (startTime ? ' ' + startTime : '');
+  if (!endDate) return start;
+  if (endDate === startDate) return startTime && endTime ? start + '-' + endTime : start;
+  return start + ' ~ ' + dateLabel(endDate) + (endTime ? ' ' + endTime : '');
+}
+
+export function groupImportantNodesByMonth(nodes = []) {
+  const grouped = new Map();
+  [...nodes].sort((a, b) => (text(a.startDate) + ' ' + text(a.startTime)).localeCompare(text(b.startDate) + ' ' + text(b.startTime)))
+    .forEach(node => {
+      const month = Number(text(node.startDate).slice(5, 7));
+      if (!Number.isInteger(month) || month < 1 || month > 12) return;
+      if (!grouped.has(month)) grouped.set(month, []);
+      grouped.get(month).push(node);
+    });
+  return [...grouped.entries()].sort((a, b) => a[0] - b[0]).map(([month, monthNodes]) => ({ month, nodes: monthNodes }));
+}
