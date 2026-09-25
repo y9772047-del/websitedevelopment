@@ -532,6 +532,34 @@
           }
         }
       ],
+      "get": {
+        "summary": "查询本人单个任务",
+        "description": "仅查询当前登录用户的任务；任务不存在或不属于当前用户时，HTTP 200 且 success=false。",
+        "responses": {
+          "200": {
+            "description": "必须检查 success；任务不存在时 data=null。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "路径 id 不是整数"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      },
       "put": {
         "summary": "修改本人任务",
         "requestBody": {
@@ -591,6 +619,57 @@
         }
       }
     },
+    "/api/tasks/{id}/status": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "更新本人任务状态",
+        "description": "仅按 id 和当前登录用户更新 status。现有后端不校验状态枚举；目标任务不存在时 HTTP 200 且 success=false。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskStatusInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "必须检查 success；data 为 null。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "路径 id 或 JSON 格式无效"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
     "/api/records": {
       "get": {
         "summary": "查询当前用户学习记录",
@@ -635,6 +714,74 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RecordResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/records/task/{taskId}": {
+      "parameters": [
+        {
+          "name": "taskId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "summary": "查询当前用户指定任务的学习记录时间线",
+        "description": "按学习日期倒序返回当前用户的记录；任务无记录或不属于当前用户时返回空数组。",
+        "responses": {
+          "200": {
+            "description": "返回记录数组；空结果仍为 success=true。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordListResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "路径 taskId 不是整数"
+          },
+          "401": {
+            "description": "未登录，返回 success=false"
+          },
+          "403": {
+            "description": "来源不在 CORS 白名单"
+          },
+          "500": {
+            "description": "未处理的服务端错误"
+          }
+        }
+      }
+    },
+    "/api/records/recent": {
+      "get": {
+        "summary": "查询当前用户最近 8 条学习记录",
+        "description": "按学习日期倒序，最多返回 8 条。",
+        "responses": {
+          "200": {
+            "description": "返回最多 8 条记录。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordListResult"
                 }
               }
             }
@@ -2134,6 +2281,17 @@
                 "$ref": "#/components/schemas/User"
               }
             ],
+            "nullable": true
+          }
+        }
+      },
+      "TaskStatusInput": {
+        "type": "object",
+        "description": "仅提交 status；现有后端没有枚举校验，调用方应传入界面支持的任务状态。",
+        "properties": {
+          "status": {
+            "type": "string",
+            "maxLength": 20,
             "nullable": true
           }
         }
