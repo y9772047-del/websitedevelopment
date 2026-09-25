@@ -2,7 +2,7 @@
 
 ## 完成范围
 
-后端沿用 Spring Boot @RestController 提供 RESTful JSON。Vue 3 单文件组件通过 Axios 调用接口；开发时可独立运行 Vite，最终构建由 Spring Boot 在同一端口提供。当前覆盖：
+后端沿用 Spring Boot @RestController 提供 RESTful JSON。Vue 3 单文件组件通过 Axios 调用接口；开发时可独立运行 Vite，发布时可分别部署 `frontend/dist/` 与 Spring Boot，也可由 Spring Boot 在同一端口提供 Vue。当前覆盖：
 
 - 登录、注册、退出和刷新后的 Session 恢复。
 - 学习计划列表、详情、新增、修改、删除。
@@ -49,6 +49,18 @@ pnpm install --frozen-lockfile
 ~~~
 
 在 `frontend/` 执行 `npm run build` 后，产物直接写入 `src/main/resources/static/`；随后重新打包 Spring Boot，即可从同一服务访问 Vue 和 `/api`。构建后的 `index.html` 与带哈希的资源文件须一起提交。Bootstrap CSS 使用 CDN，离线环境需要自行托管。
+
+独立部署 Vue 时，先启动后端，再在 `frontend/` 中设置 API 地址并构建单独的 `dist/`。下列 `preview:standalone` 仅用于本地验收；正式部署可将 `dist/` 放到静态 Web 服务器，后端的 `APP_CORS_ALLOWED_ORIGINS` 须包含前端完整 Origin。
+
+~~~powershell
+cd frontend
+$env:VITE_API_BASE_URL = 'http://localhost:8080/api'
+pnpm run build:standalone
+Remove-Item Env:VITE_API_BASE_URL
+pnpm run preview:standalone
+~~~
+
+此时前端访问 http://localhost:4173，后端访问 http://localhost:8080，Axios 跨域请求携带 Session Cookie。`build:standalone` 不改写 Spring Boot 的静态资源；默认 `pnpm build` 仍用于同源 JAR。不同站点域名的正式部署还需 HTTPS 和适当的跨站 Cookie 设置，本实验验证的是 localhost 不同端口。
 
 后端地址可在构建前写入 frontend/.env.local：
 

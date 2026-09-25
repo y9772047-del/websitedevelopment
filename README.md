@@ -1,6 +1,6 @@
 # 大学生学习计划管理系统 MVP
 
-本项目是软件工程课程项目 MVP，技术栈为 Spring Boot + Maven + MySQL + MyBatis-Plus，前端使用 Vue 3、Vite、Axios 和 Bootstrap 5 CDN。Vue 构建资源由 Spring Boot 统一提供。
+本项目是软件工程课程项目 MVP，技术栈为 Spring Boot + Maven + MySQL + MyBatis-Plus，前端使用 Vue 3、Vite、Axios 和 Bootstrap 5 CDN。Vue 可独立构建部署，也可由 Spring Boot 同源提供构建资源。
 
 ## 本次模块调整说明
 
@@ -31,7 +31,7 @@ spring:
 4. 已提交的 `src/main/resources/static` 包含 Vue 构建结果；如修改了 `frontend/`，先在该目录运行 `pnpm install --frozen-lockfile` 和 `pnpm build`。`pnpm build` 会更新 Spring Boot 的静态资源。`npm install` 和 `npm run build` 也可用于本地构建。
 5. 使用 IntelliJ IDEA 打开项目，等待 Maven 依赖下载完成。
 6. 设置环境变量 `DB_PASSWORD`，然后运行 `com.example.studyplan.StudyPlanSystemApplication`。
-7. 浏览器访问 `http://localhost:8080`。开发模式可在 `frontend/` 运行 `pnpm dev`，访问 `http://localhost:5173`；API 默认连接 `http://localhost:8080/api`。
+7. 浏览器访问 `http://localhost:8080`。开发模式可在 `frontend/` 运行 `pnpm dev`，访问 `http://localhost:5173`；API 默认连接 `http://localhost:8080/api`。独立生产构建可用 `pnpm build:standalone` 生成 `frontend/dist/`，需在构建前设置 `VITE_API_BASE_URL`；命令与跨域配置见 [实验二说明](docs/experiment-2/README.md)。
 
 ## 测试账号
 

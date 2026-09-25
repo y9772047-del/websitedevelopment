@@ -115,7 +115,7 @@
 
 ## 分别构建、部署与最终联调（2026-09-26）
 
-在基于 `origin/main` 的隔离分支上复核实验二的两种部署方式。前端由 `pnpm build` 独立构建；开发时 Vite 运行于 `http://localhost:5173`，Spring Boot 运行于 `http://localhost:8080`，Vue 通过 Axios 携带 Session Cookie 请求后端 JSON API。发布时 Maven 将前端构建产物打入 JAR，同源由 Spring Boot 提供首页、哈希 JS/CSS 和 API。两种方式均在真实 MySQL 与 Edge 无头浏览器中验证，临时服务在检查后停止。
+在基于 `origin/main` 的隔离分支上复核三种运行方式：开发时 Vite 运行于 `http://localhost:5173`，Spring Boot 运行于 `http://localhost:8080`；同源发布时 Maven 将 `pnpm build` 的 Vue 产物打入 JAR；独立发布时 `pnpm build:standalone` 将前端产物写入 `frontend/dist/`，并在构建时指定后端 API 地址。本地独立预览运行于 `http://localhost:4173`。Vue 通过 Axios 携带 Session Cookie 请求后端 JSON API。三种方式均在真实 MySQL 与 Edge 无头浏览器中验证，临时服务在检查后停止。
 
 | 检查 | 实际结果 |
 | --- | --- |
@@ -123,7 +123,10 @@
 | Spring Boot 构建 | `mvnw.cmd clean verify`：34 项测试通过，`BUILD SUCCESS`，JAR 已生成 |
 | 跨域开发联调 | Vite 页面登录演示学生账号后，仪表盘、计划、任务、记录、日历、重要节点均读取成功；27 次 `/api` 响应均为 200，页面脚本错误为 0；刷新后 Session 恢复，退出成功 |
 | 打包发布联调 | 从 JAR 加载哈希资源，学生登录、六个页面、刷新及退出通过；24 次 API 响应无错误，页面脚本错误为 0；390px 视口无横向溢出 |
+| 独立前端发布联调 | `build:standalone` 生成 `frontend/dist/` 且不改写 Spring Boot 静态资源；4173 前端与 8080 后端的 Edge 回归通过，26 次跨域 API 响应均无错误并允许 4173 来源，390px 页面无横向溢出；新命令生成的 `dist/` 再次联调 14 次 API 均成功 |
 | 管理员联调 | 从 JAR 登录演示管理员，后台首页、用户、任务、反馈、主题页面及刷新、退出通过；9 次 API 响应无错误，页面脚本错误为 0 |
 | 接口与文档人工核对 | 49 个 Controller HTTP 操作与 OpenAPI 对应；Vue 使用的计划、任务、记录、节点字段与 Java/SQL 命名和类型一致；Axios 同时处理 HTTP/网络错误与 HTTP 200 的业务失败 |
 
 跨域凭证和预检、未登录 401、学生访问管理接口 403、缺少节点 `year` 的 400，以及不存在任务的 `success=false` 已在前述 REST 核对中验证。任务状态 PATCH 的后端枚举校验缺口仍如实写在 OpenAPI 中；本轮为避免修改现有学习数据，没有发起该写请求。浏览器联调也未调用外部 AI 服务，因此不能据此声称 DeepSeek 生成结果已验证。未执行数据库 schema 变更或 SQL 迁移。
+
+独立前端包由 CI 单独构建并上传；默认构建重新生成 JAR 内资源。独立部署到其他域名时仍须按实际 API 地址重建前端，并配置后端允许的完整 Origin 与跨站 Cookie 策略。
