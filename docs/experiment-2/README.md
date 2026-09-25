@@ -60,12 +60,13 @@ VITE_API_BASE_URL=https://api.example.com/api
 
 ## 接口与字段核对
 
-openapi.json 是 OpenAPI 3.0.3 文档，覆盖后端现有的 45 个 HTTP 操作，包括 Vue 当前使用的接口：认证、计划、任务、记录、AI 改进建议与周报、仪表盘、统计、日历、重要节点、关键词规则、学生反馈及管理后台。
+openapi.json 是 OpenAPI 3.0.3 文档，覆盖后端现有的 49 个 HTTP 操作，包括 Vue 当前使用的接口：认证、计划、任务、记录、AI 改进建议与周报、仪表盘、统计、日历、重要节点、关键词规则、学生反馈及管理后台。
 
 - DB plan_name 对应 Java/API/Vue planName，上限 100；goal 上限 255。
 - 日期格式为 yyyy-MM-dd；新建计划可发送 null。现有 ORM 更新策略无法可靠清空已设置日期，因此编辑表单会阻止这种误导性的保存。
 - 新表单只允许“未开始、进行中、已完成、已取消”。读取旧数据时保留既有历史状态。
 - HTTP 200 仍可能表示业务失败，Axios 会检查 success；401 会清除私有界面状态。
+- 任务状态 PATCH 只接收 status；后端目前未校验状态枚举，文档按现有行为标明此边界。不存在或不属于当前用户的任务返回 HTTP 200 且 success=false。
 - 删除计划会同时删除其任务和学习记录，界面会在请求前确认。
 - 注册界面只提交 username、realName 和 password；角色、状态等由后端规则决定。
 

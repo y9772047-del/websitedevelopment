@@ -104,3 +104,11 @@
 - `pnpm test`：31 项通过；`pnpm build`：88 个模块，静态资源已更新。
 - `mvnw.cmd test`：34 项通过。8080 端口有正在运行的 JAR，为避免覆盖该文件，使用临时独立输出目录运行 `mvnw.cmd -f .codex-dashboard-verification-pom.xml clean verify`：34 项通过并打包成功。新 JAR 已复制为 `target/study-plan-system-dashboard-update.jar`，哈希校验一致，临时 POM 和目录已清理。
 - `git diff --check` 通过；构建后的 JS 不再包含“学习统计”标题或 `/statistics` 请求。未中断运行中服务，未对真实数据库执行写操作。
+
+## REST 与 OpenAPI 最终核对（2026-09-25）
+
+再次逐一比对 Controller 的 HTTP 映射与 AI 辅助编写的 OpenAPI，发现旧文档漏列 4 项：`GET /api/tasks/{id}`、`PATCH /api/tasks/{id}/status`、`GET /api/records/task/{taskId}`、`GET /api/records/recent`。现有 49 项 Controller 操作均已对应到 OpenAPI；文档包含 54 个 schema，所有 `$ref` 均可解析。新增的状态请求体与数据库 `study_task.status VARCHAR(20)` 一致，同时如实标注后端尚未校验状态枚举。历史段落中的 45 项数字记录的是修订前版本。
+
+使用现有 JAR 在临时 18080 端口与真实 MySQL 做只读联调：Vue 首页和哈希 JS 资源返回 HTTP 200；来自 `http://localhost:5173` 的 CORS 预检返回 HTTP 200、允许该来源及 Cookie 凭证；未登录访问仪表盘返回 401。演示学生账号登录后，仪表盘、计划、任务、记录、最近记录、单个任务、任务记录时间线、带年份的重要节点及日历均读取成功；访问管理员用户列表返回 403，退出成功。不存在的任务返回 HTTP 200 且 `success=false`，同 ID 的记录时间线返回成功的空数组；重要节点缺少必填 `year` 时返回 HTTP 400。临时服务已停止。
+
+联调没有新增、修改或删除学习数据。为了保护现有数据，没有对任务状态 PATCH 发起真实写请求；其请求字段、所有权条件和响应边界依据 Controller、Entity、SQL 人工核对。没有执行 schema 变更或 SQL 迁移。
