@@ -47,6 +47,14 @@ jobs:
       - name: Test Vue frontend
         working-directory: frontend
         run: pnpm test
+      - name: Build standalone Vue frontend
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: http://localhost:8080/api
+        run: |
+          pnpm build:standalone
+          test -f dist/index.html
+          grep -q 'http://localhost:8080/api' dist/assets/*.js
       - name: Build Vue frontend for Spring Boot
         working-directory: frontend
         run: pnpm build
@@ -59,6 +67,14 @@ jobs:
           name: test-reports-java-${{ matrix.java }}
           path: target/surefire-reports/
           if-no-files-found: warn
+          retention-days: 7
+      - name: Upload standalone Vue site
+        if: success() && matrix.java == '17'
+        uses: actions/upload-artifact@v4
+        with:
+          name: study-plan-vue-standalone
+          path: frontend/dist/
+          if-no-files-found: error
           retention-days: 7
       - name: Upload application JAR
         if: success() && matrix.java == '17'

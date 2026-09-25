@@ -12,3 +12,4 @@ application-local.yml
 *.key
 start-codex-app-with-proxy.ps1
 websitedevelopment-codex-error-log.md
+frontend/dist/
