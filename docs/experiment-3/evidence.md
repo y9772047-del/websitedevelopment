@@ -42,4 +42,9 @@
 * 252c573 共同基线
 ~~~
 
-本轮 PR 与 CI 链接在提交后补充；本地成功不替代远程结果。最终人工评审按实际参与者填写，不虚构。
+## 本轮 PR 与 CI
+
+- [实验三 PR #7](https://github.com/y9772047-del/websitedevelopment/pull/7)：打开 Files changed 审查材料，Checks 查看本轮最新提交的测试。
+- [材料提交的 push 运行](https://github.com/y9772047-del/websitedevelopment/actions/runs/36326874645)：对应 `0cc192b`。后续补充证据会产生新的 CI 运行，以 PR 最新 Checks 为准。
+
+本轮不自动合并，供提交者阅读差异、检查日志并实际完成最终判断。最终人工评审按实际参与者填写，不虚构；历史 PR #6 的空 reviews 结果不能当成本轮 PR 的审批状态。

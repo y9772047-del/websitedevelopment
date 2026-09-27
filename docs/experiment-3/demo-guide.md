@@ -1,6 +1,6 @@
 # 给助教演示：5–8 分钟操作指南
 
-目标不是背名词，而是能找到证据并解释一次完整流程。先打开仓库、实验三 PR、Actions 三个浏览器标签。演示前自己点一遍，下面的话可以用自己的语言说。
+目标不是背名词，而是能找到证据并解释一次完整流程。先打开 [仓库](https://github.com/y9772047-del/websitedevelopment)、[实验三 PR #7](https://github.com/y9772047-del/websitedevelopment/pull/7)、[Actions](https://github.com/y9772047-del/websitedevelopment/actions) 三个浏览器标签。演示前自己点一遍，下面的话可以用自己的语言说。
 
 ## 先懂六个词
 
