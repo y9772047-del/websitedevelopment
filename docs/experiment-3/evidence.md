@@ -27,7 +27,7 @@
 | 合并另一侧 | 命令返回 1，文件状态 UU | 真实 content conflict，原文见下方 |
 | 综合两侧要求的解决提交 | `d3f7d71` | 保留两侧要求，两个父提交为 dbbb00d 和 bd7d2ec |
 
-[冲突前原文](evidence/conflict-before.txt) 保存的是本轮 Git 产生的标记。解决后的 [练习文档](merge-practice.md) 不含这些标记。`<<<<<<<` 是当前侧，`=======` 分隔两侧，`>>>>>>>` 是待合并分支；选择合理内容并删除标记后，git add 标记已解决，git commit 完成合并。
+[冲突前原文](evidence/conflict-before.txt) 保存的是本轮 Git 产生的标记；仅添加行号前缀，避免 Git 的差异检查把历史证据误判为尚未解决的冲突。解决后的 [练习文档](merge-practice.md) 不含这些标记。`<<<<<<<` 是当前侧，`=======` 分隔两侧，`>>>>>>>` 是待合并分支；选择合理内容并删除标记后，git add 标记已解决，git commit 完成合并。
 
 ~~~text
 *   d3f7d71 解决冲突，保留 CI 与人工审查要求
