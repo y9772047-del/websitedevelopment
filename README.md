@@ -77,6 +77,7 @@ spring:
 
 - [实验二：Vue 前后端分离与 RESTful API](docs/experiment-2/README.md)
 - [实验三：Git 协作与持续集成](docs/experiment-3/README.md)
+- [助教演示：GitHub 操作与讲解指南](docs/experiment-3/demo-guide.md)
 
 ## 说明
 

@@ -1,49 +1,54 @@
 # 实验三：Git 协作开发与持续集成
 
-本实验以[大学生学习计划管理系统](https://github.com/y9772047-del/websitedevelopment)为例，保存实验二的 Vue 整合结果，通过分支、Pull Request、代码审查和 GitHub Actions 验证后合入主分支。
+本轮以已验收的 Vue 版本 `d6951b8` 为基线，仅整理实验材料并完成真实冲突练习，不修改业务代码。课程方案要求：分支管理、Pull Request、Code Review、基础 CI；步骤包含 feature 分支、合并、解决冲突、推送远程和 PR 模板；AI 可初步评审，人工负责最终判断。
 
-## 提交与运行范围
+## 要求与成果
 
-当前前端源码在 `frontend/`。`pnpm build` 把 Vue 页面、JavaScript 和 CSS 构建到 `src/main/resources/static/index.html` 与 `assets/`，Spring Boot 从 `/` 提供页面；旧手写 `static/pages/`、`static/js/`、`static/css/` 不参与运行。构建产物仍然是浏览器必需的 JS/CSS 文件，应与源码修改一起提交，以便直接运行后端 JAR。
+| 要求 | 本项目成果 | 怎么证明 |
+| --- | --- | --- |
+| 版本与分支 | main 保持已验收版本；两个 feature 分支模拟不同修改 | [证据索引](evidence.md)的提交图与分支链接 |
+| 合并与冲突 | 同一句验收条件发生真实 content conflict；解决时保留测试和审查要求 | [冲突原文](evidence/conflict-before.txt)、解决提交 `d3f7d71` |
+| Pull Request | 改动通过专门 PR 提交，展示目的、差异和验证 | 本轮 PR 的 Conversation、Commits、Files changed |
+| Code Review | AI 初步自查记录；最终由提交者阅读差异并负责 | [自查记录](review.md)，不冒充独立人工批准 |
+| CI | GitHub Actions 用 Java 17/21、Node 22、pnpm 执行前端测试、两种 Vue 构建和 Maven 验证 | Actions 的实际绿色运行及日志 |
+| PR 模板 | `.github/pull_request_template.md` 包含验证、影响、AI 使用与评审 | 新建 PR 时自动填入模板 |
 
-本次工作使用 `codex/vue-final-integrated` 隔离分支。`git add` 选择要保存的文件，`git commit` 在本地记录版本，`git push` 上传分支；Pull Request 展示相对 `main` 的差异和自动检查，检查通过后才合并。旧 HTML 版本可从 Git 历史查阅，不需要保留为当前运行入口。
+本练习是同一账号进行的分支协作模拟。仓库已存在，不必重新 git init。不要把它说成两名同学各自提交的团队协作。
 
-## 配置文件
+## 当前 CI 到底做什么
 
-- `.github/workflows/ci.yml`：主分支和 PR 的自动验证。
-- `.github/pull_request_template.md`：说明改动、验证、影响及 AI 使用。
-- `.gitattributes`：固定 Maven Linux 脚本的 LF 换行。
-- `.gitignore`：排除构建缓存、IDE、本机环境文件、密钥等。
-- `docs/experiment-3/review.md`：本轮审查及验证依据。
-- `docs/experiment-3/merge-practice.md`：合并冲突的独立练习说明，不代表已经发生冲突。
+1. 检出本次提交，安装 JDK、Node 和 pnpm。
+2. 用 `pnpm-lock.yaml` 锁定依赖安装，运行 `pnpm test`。
+3. 构建独立 Vue 包 `frontend/dist/`，检查产物和指定 API 地址。
+4. 构建写入 Spring Boot 静态目录的 Vue 包。
+5. Maven `clean verify` 编译、运行 Java 测试并打包 JAR。
+6. 保存测试报告；Java 17 任务额外保存独立 Vue 包和 JAR，保留 7 天。过期后下载入口可能消失，日志仍是构建证据。
 
-`.env`、本机数据库口令、私钥和个人课程文件不应提交。`frontend/.env.example` 与 `src/main/resources/application.yml` 可以提交，因为只包含示例或环境变量引用；提交前仍要检查实际内容。数据库连接口令通过 `DB_PASSWORD` 注入。课程示例中的登录用户密码仍按现有逻辑保存，不能把两者混为一谈。
+基线实测数量是前端 31 项、Java 34 项。旧材料的“没有 npm 构建”“static/js 检查”“49 项测试”描述旧 HTML 版本，不用于当前验收。CI 不连接真实 MySQL、不调用 DeepSeek，也不证明所有界面和外部 AI 调用正确；实验二浏览器证据另见 `docs/experiment-2/verification.md`。
 
-## CI 验证
+## 本地验证
 
-工作流在 Ubuntu 的 JDK 17、21 矩阵中使用 Node 22 和 pnpm 11.19.0，依据已跟踪的 `frontend/pnpm-lock.yaml` 执行 `pnpm install --frozen-lockfile`，接着运行 `pnpm test`、`pnpm build`，最后运行 Maven `clean verify`。这样 Maven 的静态资源测试和打包检查的是本次 Vue 构建结果，而不是已删除的旧脚本目录。成功时保存 JDK 17 的 JAR；无论成功与否都尝试保存测试报告。
+先停止正在运行、锁定 target JAR 的 Java 进程。在隔离工作目录操作，原 D 目录有未提交文件，不要在那里执行 reset --hard、clean 或直接切换分支。
 
-本地可在项目根目录的 PowerShell 运行：
+~~~powershell
+$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12.1'
+pnpm --dir frontend test
+pnpm --dir frontend build
+.\mvnw.cmd clean verify
+git diff --check
+~~~
 
-```powershell
-cd frontend
-pnpm install --frozen-lockfile
-pnpm test
-pnpm build
-cd ..
-.\mvnw.cmd --batch-mode --no-transfer-progress clean verify
-```
+只查看历史的命令不会修改文件：
 
-若本机没有设置 `JAVA_HOME`，先在当前终端将它指向已安装的 JDK。Maven 单元和静态资源测试不要求真实数据库或 DeepSeek Key；它们不能替代数据库、浏览器及外部 AI 的完整端到端验收。
+~~~powershell
+git status --short --branch
+git log --graph --oneline --max-count=12
+git show --format=fuller --no-patch d3f7d71
+git diff d3f7d71^1 d3f7d71 -- docs/experiment-3/merge-practice.md
+~~~
 
-## 已完成的 GitHub 证据
+## 展示材料
 
-实验二 Vue 整合通过 [PR #1](https://github.com/y9772047-del/websitedevelopment/pull/1) 合入 `main`；[合并后的 Actions](https://github.com/y9772047-del/websitedevelopment/actions/runs/35950272738) 中 Java 17 和 21 两组检查均成功。本次原版页面回归修正尚未包含在该 PR 和运行中，应以新的提交与检查单独记录。
+先读 [助教演示指南](demo-guide.md)，再按 [证据索引](evidence.md) 打开 GitHub 页面。只展示真正执行的操作；AI 辅助写作与提交者最终审查须区分。课程未提交的 PPT、DOCX 和个人笔记仍保留在原目录，没有自动上传。
 
-## 证据与审查
-
-实验二最终整合时，本机 Vue 测试 27 项通过，Maven 测试 34 项通过，并完成构建资源、角色权限和部分浏览器联调。旧静态版曾有 49 项测试，那是历史版本，不能作为当前 Vue 版的测试数量。远程 PR、审查意见、Actions 运行和合并结果应以实际 GitHub 链接与页面为准，不能把本地成功当作远程成功。课程报告可附提交图、PR 差异、Actions 结果及测试报告；如另做合并冲突练习，应保存真实操作记录。
-
-AI 辅助了代码定位、CI 适配、文档整理和验证；`review.md` 记录的是 AI 辅助审查，不代表独立人工批准。
-
-参考：[GitHub 工作流语法](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)、[setup-node 的 pnpm 缓存说明](https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md#caching-packages-data)、[pnpm/action-setup](https://github.com/pnpm/action-setup)。
+参考：[GitHub 分支与 PR 入门](https://docs.github.com/en/get-started/using-github/hello-world)、[命令行解决冲突](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/resolving-a-merge-conflict-using-the-command-line)、[查看 Actions 运行历史](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-workflow-run-history)。
