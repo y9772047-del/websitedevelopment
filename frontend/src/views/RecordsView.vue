@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { buildRecordAiRequest, prepareRecord } from '../workflow.js';
+import { filterRecords } from '../records.js';
 
 const props = defineProps({ api: { type: Function, required: true } });
 const emit = defineEmits(['session-expired', 'busy-change']);
@@ -11,8 +12,14 @@ const editingId = ref(null), suggestions = ref([]), aiTip = ref('填写学习内
 const today = () => new Date().toLocaleDateString('en-CA');
 const emptyRecord = () => ({ taskId: '', studyDate: today(), duration: 0, content: '', completionStatus: '部分完成', problems: '', improvementPlan: '' });
 const form = reactive(emptyRecord());
+const filters = reactive({ planId: '', taskId: '', completionStatus: '', date: '' });
+const activeFilters = ref({});
 const taskMap = computed(() => Object.fromEntries(tasks.value.map(task => [task.id, task])));
 const planMap = computed(() => Object.fromEntries(plans.value.map(plan => [plan.id, plan])));
+const filterTasks = computed(() => tasks.value.filter(task => !filters.planId || String(task.planId) === filters.planId));
+const visibleRecords = computed(() => filterRecords(records.value, tasks.value, activeFilters.value));
+function applyFilters() { activeFilters.value = { ...filters }; }
+function selectPlan() { filters.taskId = ''; }
 function taskLabel(task) { return (planMap.value[task.planId]?.planName || '未知计划') + ' / ' + task.taskName; }
 function resetForm() { editingId.value = null; Object.assign(form, emptyRecord()); suggestions.value = []; aiTip.value = '填写学习内容和问题与反思后生成改进计划。'; }
 async function run(action) {
@@ -69,9 +76,16 @@ onMounted(() => run(loadAll));
       <div class="stack-list"><div v-if="weeklyBusy" class="list-row"><p>DeepSeek 正在生成周报，请稍候。</p></div><div v-else-if="weeklyError" class="list-row"><p role="alert">{{ weeklyError }}</p></div><template v-else-if="weeklyReport"><div class="list-row"><div><h3>本周总结</h3><p>{{ weeklyReport.weeklySummary || '暂无总结' }}</p></div></div><div class="list-row"><div><h3>主要问题</h3><p>{{ weeklyReport.mainProblems || '暂无明确问题' }}</p></div></div><div class="list-row"><div><h3>下周建议</h3><p>{{ weeklyReport.nextWeekSuggestions || '暂无建议' }}</p></div></div><div class="list-row"><div><h3>行动清单</h3><p>{{ (weeklyReport.suggestedActions || []).join('；') || '暂无行动清单' }}</p></div><span class="badge status-doing">{{ weeklyReport.generationSourceLabel || 'DeepSeek' }}</span></div></template><div v-else class="list-row"><p>点击按钮生成本周学习报告。</p></div></div>
     </section>
     <section class="content-card"><div class="card-title-row"><h2>记录列表</h2><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy || weeklyBusy" @click="run(refreshRecords)">刷新</button></div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-3"><select v-model="filters.planId" class="form-select" aria-label="按计划筛选" @change="selectPlan"><option value="">全部计划</option><option v-for="plan in plans" :key="plan.id" :value="String(plan.id)">{{ plan.planName }}</option></select></div>
+        <div class="col-md-3"><select v-model="filters.taskId" class="form-select" aria-label="按任务筛选"><option value="">全部任务</option><option v-for="task in filterTasks" :key="task.id" :value="String(task.id)">{{ task.taskName }}</option></select></div>
+        <div class="col-md-2"><select v-model="filters.completionStatus" class="form-select" aria-label="按完成情况筛选"><option value="">全部完成情况</option><option v-for="value in ['已完成','部分完成','未完成']" :key="value">{{ value }}</option></select></div>
+        <div class="col-md-2"><input v-model="filters.date" class="form-control" type="date" aria-label="按学习日期筛选"></div>
+        <div class="col-md-2"><button class="btn btn-outline-primary w-100" :disabled="busy || aiBusy || weeklyBusy" @click="applyFilters">筛选</button></div>
+      </div>
       <div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>任务</th><th>日期</th><th>时长</th><th>内容</th><th>问题与反思</th><th>改进计划</th><th>完成情况</th><th>操作</th></tr></thead><tbody>
-        <tr v-for="record in records" :key="record.id"><td>{{ taskMap[record.taskId] ? taskLabel(taskMap[record.taskId]) : '未知任务' }}</td><td>{{ record.studyDate }}</td><td>{{ record.duration || 0 }} 分钟</td><td :title="record.content">{{ compact(record.content) }}</td><td :title="record.problems">{{ compact(record.problems) }}</td><td :title="record.improvementPlan">{{ compact(record.improvementPlan) }}</td><td>{{ record.completionStatus }}</td><td><button class="btn btn-sm btn-primary me-2" :disabled="busy || aiBusy || weeklyBusy" @click="edit(record)">编辑</button><button class="btn btn-sm btn-outline-primary" :disabled="busy || aiBusy || weeklyBusy" @click="removeRecord(record)">删除</button></td></tr>
-        <tr v-if="!records.length"><td colspan="8">暂无学习记录</td></tr>
+        <tr v-for="record in visibleRecords" :key="record.id"><td>{{ taskMap[record.taskId] ? taskLabel(taskMap[record.taskId]) : '未知任务' }}</td><td>{{ record.studyDate }}</td><td>{{ record.duration || 0 }} 分钟</td><td :title="record.content">{{ compact(record.content) }}</td><td :title="record.problems">{{ compact(record.problems) }}</td><td :title="record.improvementPlan">{{ compact(record.improvementPlan) }}</td><td>{{ record.completionStatus }}</td><td><button class="btn btn-sm btn-primary me-2" :disabled="busy || aiBusy || weeklyBusy" @click="edit(record)">编辑</button><button class="btn btn-sm btn-outline-primary" :disabled="busy || aiBusy || weeklyBusy" @click="removeRecord(record)">删除</button></td></tr>
+        <tr v-if="!visibleRecords.length"><td colspan="8">{{ records.length ? '没有符合筛选条件的学习记录' : '暂无学习记录' }}</td></tr>
       </tbody></table></div>
     </section>
   </main>
