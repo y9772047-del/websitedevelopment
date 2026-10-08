@@ -79,7 +79,7 @@ onMounted(async () => { try { authenticated(await api.get('/auth/current')); } c
     </div></nav>
     <div v-if="message" class="container-fluid app-shell pb-0"><p class="alert alert-danger" role="alert">{{ message }}</p></div>
     <DashboardView ref="dashboardView" v-show="currentView === 'dashboard'" :key="'dashboard-' + user.id" :api="api" @session-expired="sessionExpired" @busy-change="sectionBusy.dashboard = $event" />
-    <PlansView v-if="visited.plans" ref="plansView" v-show="currentView === 'plans'" :key="'plans-' + user.id" :api="api" @session-expired="sessionExpired" @busy-change="sectionBusy.plans = $event" />
+    <PlansView v-if="visited.plans" ref="plansView" v-show="currentView === 'plans'" :key="'plans-' + user.id" :api="api" @session-expired="sessionExpired" @busy-change="sectionBusy.plans = $event" @navigate="showView" />
     <TasksView v-if="visited.tasks" ref="tasksView" v-show="currentView === 'tasks'" :key="'tasks-' + user.id" :api="api" @session-expired="sessionExpired" @busy-change="sectionBusy.tasks = $event" />
     <RecordsView v-if="visited.records" ref="recordsView" v-show="currentView === 'records'" :key="'records-' + user.id" :api="api" @session-expired="sessionExpired" @busy-change="sectionBusy.records = $event" />
     <CalendarView v-if="visited.calendar" ref="calendarView" v-show="currentView === 'calendar'" :key="'calendar-' + user.id" :api="api" @session-expired="sessionExpired" @busy-change="sectionBusy.calendar = $event" />

@@ -5,6 +5,7 @@ import com.example.studyplan.common.SessionUtil;
 import com.example.studyplan.entity.AiImprovementRequest;
 import com.example.studyplan.entity.AiImprovementResponse;
 import com.example.studyplan.entity.AiWeeklyReportResponse;
+import com.example.studyplan.entity.AiPlanReviewResponse;
 import com.example.studyplan.service.AiService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +42,15 @@ public class AiController {
         try {
             AiWeeklyReportResponse response = aiService.generateWeeklyReport(SessionUtil.currentUserId(session));
             return Result.ok("AI 周报生成成功", response);
+        } catch (RuntimeException e) {
+            return Result.fail(e.getMessage());
+        }
+    }
+
+    @PostMapping("/plans/{planId}/review")
+    public Result<AiPlanReviewResponse> generatePlanReview(@PathVariable Long planId, HttpSession session) {
+        try {
+            return Result.ok("目标复盘生成成功", aiService.generatePlanReview(planId, SessionUtil.currentUserId(session)));
         } catch (RuntimeException e) {
             return Result.fail(e.getMessage());
         }

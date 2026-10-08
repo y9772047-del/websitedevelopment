@@ -30,7 +30,14 @@ spring:
 
 4. 已提交的 `src/main/resources/static` 包含 Vue 构建结果；如修改了 `frontend/`，先在该目录运行 `pnpm install --frozen-lockfile` 和 `pnpm build`。`pnpm build` 会更新 Spring Boot 的静态资源。`npm install` 和 `npm run build` 也可用于本地构建。
 5. 使用 IntelliJ IDEA 打开项目，等待 Maven 依赖下载完成。
-6. 设置环境变量 `DB_PASSWORD`，然后运行 `com.example.studyplan.StudyPlanSystemApplication`。
+6. 设置环境变量 `DB_PASSWORD`，然后运行 `com.example.studyplan.StudyPlanSystemApplication`。也可以在项目根目录使用 PowerShell 启动：
+
+```powershell
+$env:DB_PASSWORD = "你的本机 MySQL 密码"
+# 需要 AI 目标复盘时再设置：
+$env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
+.\mvnw.cmd spring-boot:run
+```
 7. 浏览器访问 `http://localhost:8080`。开发模式可在 `frontend/` 运行 `pnpm dev`，访问 `http://localhost:5173`；API 默认连接 `http://localhost:8080/api`。独立生产构建可用 `pnpm build:standalone` 生成 `frontend/dist/`，需在构建前设置 `VITE_API_BASE_URL`；命令与跨域配置见 [实验二说明](docs/experiment-2/README.md)。
 
 ## 测试账号
@@ -55,6 +62,8 @@ spring:
 
 - 登录、注册、退出登录，使用 Session 保存登录状态。
 - 学习计划基本增删改查。
+- 学习计划详情展示左到右的目标树；任务可独立收放，同时展开多个任务后查看各自的学习记录。
+- 学习计划详情可根据至少 2 条关联记录按需生成 AI 目标复盘；使用时需要设置 `DEEPSEEK_API_KEY`。
 - 学习任务基本增删改查，任务关联学习计划。
 - 学习记录基本增删改查，记录关联学习任务，支持填写问题与反思，并根据学习内容、完成情况和问题与反思生成改进计划。
 - AI 学习改进措施助手集成在学习记录模块中，生成结果由学生确认后保存到对应学习记录。

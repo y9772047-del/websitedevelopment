@@ -21,7 +21,7 @@
 
 - `frontend/src/App.vue`：会话恢复、角色入口、导航和主题。
 - `frontend/src/views/AuthView.vue`：登录和注册。
-- `PlansView.vue` 与 `components/PlanForm.vue`：计划；`TasksView.vue`：任务；`RecordsView.vue`：学习记录、AI 改进建议和周报。
+- `PlansView.vue` 与 `components/PlanForm.vue`：计划；计划详情内的 `components/PlanHierarchy.vue` 与 `planTree.js`：计划 → 任务 → 记录的完整目标树及目标级 AI 复盘；`TasksView.vue`：任务；`RecordsView.vue`：学习记录、AI 改进建议和周报。
 - `DashboardView.vue`：首页指标、焦点提醒、分类热力图及投入分布；重复的学习统计区块已移除。
 - `CalendarView.vue` 与 `ImportantNodesView.vue`：日历、重要节点和关键词规则。
 - `FeedbackView.vue`、`ThemeView.vue`：意见反馈和主题。

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.studyplan.entity.AiImprovementRequest;
 import com.example.studyplan.entity.AiImprovementResponse;
 import com.example.studyplan.entity.AiWeeklyReportResponse;
+import com.example.studyplan.entity.AiPlanReviewResponse;
 import com.example.studyplan.entity.StudyPlan;
 import com.example.studyplan.entity.StudyRecord;
 import com.example.studyplan.entity.StudyTask;
@@ -120,6 +121,74 @@ public class AiServiceImpl implements AiService {
             log.warn("DeepSeek weekly report generation failed: {}", exception.getMessage());
             throw new RuntimeException("AI 周报生成失败：" + exception.getMessage());
         }
+    }
+
+    @Override
+    public AiPlanReviewResponse generatePlanReview(Long planId, Long userId) {
+        StudyPlan plan = planService.getOne(new LambdaQueryWrapper<StudyPlan>()
+                .eq(StudyPlan::getId, planId).eq(StudyPlan::getUserId, userId));
+        if (plan == null) throw new RuntimeException("计划不存在");
+        List<StudyTask> tasks = taskService.list(new LambdaQueryWrapper<StudyTask>()
+                .eq(StudyTask::getPlanId, planId).eq(StudyTask::getUserId, userId));
+        List<Long> taskIds = tasks.stream().map(StudyTask::getId).toList();
+        List<StudyRecord> records = taskIds.isEmpty() ? List.of() : recordService.list(new LambdaQueryWrapper<StudyRecord>()
+                .eq(StudyRecord::getUserId, userId).in(StudyRecord::getTaskId, taskIds)
+                .orderByDesc(StudyRecord::getStudyDate));
+        if (records.size() < 2) throw new RuntimeException("至少 2 条学习记录才能生成目标复盘");
+        if (!deepSeekEnabled) throw new RuntimeException("DeepSeek 已关闭，无法生成目标复盘");
+        if (apiKey == null || apiKey.isBlank()) throw new RuntimeException("DeepSeek API Key 未配置，无法生成目标复盘");
+        try {
+            return callDeepSeekPlanReview(plan, tasks, records);
+        } catch (Exception exception) {
+            log.warn("DeepSeek plan review generation failed: {}", exception.getMessage());
+            throw new RuntimeException("AI 目标复盘生成失败：" + exception.getMessage());
+        }
+    }
+
+    private AiPlanReviewResponse callDeepSeekPlanReview(StudyPlan plan, List<StudyTask> tasks, List<StudyRecord> records) throws Exception {
+        StringBuilder evidence = new StringBuilder();
+        for (StudyRecord record : records.stream().limit(40).toList()) {
+            String taskName = tasks.stream().filter(task -> task.getId().equals(record.getTaskId()))
+                    .map(StudyTask::getTaskName).findFirst().orElse("未知任务");
+            evidence.append("日期:").append(record.getStudyDate()).append(" 任务:").append(taskName)
+                    .append(" 时长:").append(record.getDuration() == null ? 0 : record.getDuration())
+                    .append(" 内容:").append(limitText(record.getContent(), 180))
+                    .append(" 问题:").append(limitText(record.getProblems(), 180))
+                    .append(" 改进:").append(limitText(record.getImprovementPlan(), 180)).append('\n');
+        }
+        long completed = tasks.stream().filter(task -> "已完成".equals(task.getStatus())).count();
+        String prompt = "请根据证据做中文学习目标复盘，只输出严格 JSON：summary、problems、actions（3条具体行动的字符串数组）。"
+                + "不得编造未记录的学习成果或问题。计划：" + limitText(plan.getPlanName(), 100)
+                + "；目标：" + limitText(plan.getGoal(), 200) + "；任务完成：" + completed + "/" + tasks.size()
+                + "；记录总数：" + records.size() + "；以下是最近最多40条记录：\n" + evidence;
+        Map<String, Object> body = Map.of("model", model, "temperature", 0.35, "messages", List.of(
+                Map.of("role", "system", "content", "你是大学生学习目标复盘助手，只依据提供的记录分析。"),
+                Map.of("role", "user", "content", prompt)));
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(apiUrl)).timeout(Duration.ofSeconds(30))
+                .header("Content-Type", "application/json").header("Authorization", "Bearer " + apiKey.trim())
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body), StandardCharsets.UTF_8)).build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() < 200 || response.statusCode() >= 300) throw new RuntimeException("HTTP " + response.statusCode());
+        String content = objectMapper.readTree(response.body()).path("choices").path(0).path("message").path("content").asText();
+        JsonNode json = objectMapper.readTree(extractJson(content));
+        AiPlanReviewResponse result = new AiPlanReviewResponse();
+        result.setSummary(cleanText(json.path("summary").asText(), "暂无有效总结"));
+        result.setProblems(cleanText(json.path("problems").asText(), "记录中未发现明确问题"));
+        List<String> actions = new ArrayList<>();
+        if (json.path("actions").isArray()) json.path("actions").forEach(item -> {
+            if (!item.asText().isBlank()) actions.add(item.asText().trim());
+        });
+        result.setActions(actions);
+        result.setRecordCount(records.size());
+        result.setStartDate(records.stream().map(StudyRecord::getStudyDate).filter(java.util.Objects::nonNull).min(LocalDate::compareTo).orElse(null));
+        result.setEndDate(records.stream().map(StudyRecord::getStudyDate).filter(java.util.Objects::nonNull).max(LocalDate::compareTo).orElse(null));
+        result.setGenerationSourceLabel(SOURCE_DEEPSEEK_LABEL);
+        return result;
+    }
+
+    private String limitText(String value, int maxLength) {
+        if (value == null) return "";
+        return value.length() > maxLength ? value.substring(0, maxLength) : value;
     }
 
     private AiWeeklyReportResponse callDeepSeekWeeklyReport(List<StudyRecord> records, List<StudyTask> tasks, LocalDate startDate, LocalDate endDate) throws Exception {
