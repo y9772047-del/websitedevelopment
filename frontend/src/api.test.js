@@ -6,6 +6,7 @@ test('uses credentials and unwraps the existing Result envelope', async () => {
   const api = createApi('http://localhost:8080/api');
   api.defaults.adapter = async config => {
     assert.equal(config.withCredentials, true);
+    assert.equal(config.withXSRFToken, true);
     assert.equal(config.baseURL, 'http://localhost:8080/api');
     return { data: { success: true, data: [{ id: 1 }] }, status: 200, config };
   };

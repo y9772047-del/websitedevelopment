@@ -12,9 +12,10 @@
 ## 后端
 
 - 启动类：`src/main/java/com/example/studyplan/StudyPlanSystemApplication.java`。
-- 接口：`src/main/java/com/example/studyplan/controller/`。`AuthController` 提供登录/注册/会话，`PlanController`、`TaskController`、`RecordController`、`DashboardController`、`CalendarController`、`StatisticsController`、`ImportantNodeController`、`ImportantNodeKeywordRuleController`、`FeedbackController`、`AiController`、`AdminController` 分别处理各业务 API。
+- 接口：`src/main/java/com/example/studyplan/controller/`。`AuthController` 提供登录/注册/JWT Cookie/当前用户，`PlanController`、`TaskController`、`RecordController`、`DashboardController`、`CalendarController`、`StatisticsController`、`ImportantNodeController`、`ImportantNodeKeywordRuleController`、`FeedbackController`、`AiController`、`AdminController` 分别处理各业务 API。
 - 业务逻辑：`service/` 和 `service/impl/`；数据库映射：`mapper/`；模型：`entity/`。
-- `config/WebConfig.java` 注册登录和管理员 API 拦截器，并配置开发模式下带凭证的 CORS。
+- `security/` 包提供 JWT 签发校验、Spring Security、CSRF、角色权限加载和旧密码迁移；`config/WebConfig.java` 注册兼容拦截器并配置开发模式下带凭证的 CORS。
+- `mapper/RbacMapper.java` 查询用户角色与权限；`db/experiment4_auth_upgrade.sql` 为已有数据库增量建立 RBAC 表，`db/schema.sql` 用于全新数据库。
 - 数据库建表与升级脚本：`src/main/resources/db/`；连接配置：`src/main/resources/application.yml`。
 
 ## Vue 前端
@@ -26,7 +27,7 @@
 - `CalendarView.vue` 与 `ImportantNodesView.vue`：日历、重要节点和关键词规则。
 - `FeedbackView.vue`、`ThemeView.vue`：意见反馈和主题。
 - `AdminPortal.vue` 与 `Admin*View.vue`：管理员页面。
-- `frontend/src/api.js`：Axios、Session 凭证与错误处理。`plan.js`、`workflow.js`、`insights.js` 和 `portal.js`：表单字段、日期、批量导入、统计与主题规则。
+- `frontend/src/api.js`：Axios、JWT Cookie 凭证、CSRF 请求头与错误处理。`plan.js`、`workflow.js`、`insights.js` 和 `portal.js`：表单字段、日期、批量导入、统计与主题规则。
 - `frontend/src/styles/`：原有视觉样式已经迁入 Vue 源码，保留既有外观。
 
 ## 持续集成

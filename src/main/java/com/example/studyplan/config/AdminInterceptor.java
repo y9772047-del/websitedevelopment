@@ -11,7 +11,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class AdminInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        User user = SessionUtil.currentUser(request.getSession());
+        User user = SessionUtil.currentUser(request.getSession(false));
         if (user != null && "admin".equals(user.getRole())) {
             return true;
         }

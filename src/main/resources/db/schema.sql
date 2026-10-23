@@ -1,6 +1,11 @@
 CREATE DATABASE IF NOT EXISTS study_plan_system DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE study_plan_system;
+SET NAMES utf8mb4;
 
+DROP TABLE IF EXISTS role_permission;
+DROP TABLE IF EXISTS user_role;
+DROP TABLE IF EXISTS permission;
+DROP TABLE IF EXISTS role;
 DROP TABLE IF EXISTS feedback;
 DROP TABLE IF EXISTS important_node_keyword_rule;
 DROP TABLE IF EXISTS important_node;
@@ -13,12 +18,40 @@ DROP TABLE IF EXISTS user;
 CREATE TABLE user (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
-    password VARCHAR(100) NOT NULL COMMENT '密码，课程项目第一版使用明文，正式项目应加密',
+    password VARCHAR(100) NOT NULL COMMENT 'BCrypt 密码哈希',
     real_name VARCHAR(50) COMMENT '姓名',
     role VARCHAR(20) NOT NULL DEFAULT 'student' COMMENT '角色：student/admin',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1正常/0禁用',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间'
 ) COMMENT='用户表';
+
+CREATE TABLE role (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(40) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL
+) COMMENT='角色表';
+
+CREATE TABLE permission (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(80) NOT NULL UNIQUE,
+    name VARCHAR(80) NOT NULL
+) COMMENT='权限表';
+
+CREATE TABLE user_role (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    CONSTRAINT fk_user_role_user FOREIGN KEY (user_id) REFERENCES user(id),
+    CONSTRAINT fk_user_role_role FOREIGN KEY (role_id) REFERENCES role(id)
+) COMMENT='用户角色关联';
+
+CREATE TABLE role_permission (
+    role_id BIGINT NOT NULL,
+    permission_id BIGINT NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    CONSTRAINT fk_role_permission_role FOREIGN KEY (role_id) REFERENCES role(id),
+    CONSTRAINT fk_role_permission_permission FOREIGN KEY (permission_id) REFERENCES permission(id)
+) COMMENT='角色权限关联';
 
 CREATE TABLE study_plan (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '计划ID',
@@ -132,8 +165,22 @@ CREATE TABLE feedback (
 ) COMMENT='用户反馈表';
 
 INSERT INTO user (username, password, real_name, role, status) VALUES
-('student', '123456', '测试学生', 'student', 1),
-('admin', 'admin123', '系统管理员', 'admin', 1);
+('student', '$2a$10$sLzSgF40FTHUZrkTIFzM4.fiDaX8giehKyIOlVU2h40Ps6.GxnVse', '测试学生', 'student', 1),
+('admin', '$2a$10$JQlzlTbs8lz8mXreE.sBTu2DISLTfe1WF8ab.8ufdWaeECYq0Qy0a', '系统管理员', 'admin', 1);
+
+INSERT INTO role (code, name) VALUES ('student', '学生'), ('admin', '管理员');
+INSERT INTO permission (code, name) VALUES
+('study:access', '使用学习功能'),
+('admin:access', '进入管理后台'),
+('users:manage', '管理用户'),
+('tasks:manage', '管理任务'),
+('feedback:manage', '处理反馈');
+INSERT INTO role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM role r JOIN permission p
+WHERE (r.code = 'student' AND p.code = 'study:access')
+   OR (r.code = 'admin');
+INSERT INTO user_role (user_id, role_id)
+SELECT u.id, r.id FROM user u JOIN role r ON r.code = u.role;
 CREATE TABLE important_node_keyword_rule (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '关键词规则ID',
     user_id BIGINT NOT NULL COMMENT '所属用户ID',

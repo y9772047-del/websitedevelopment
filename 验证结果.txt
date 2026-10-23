@@ -1,0 +1,20 @@
+大学生学习计划管理系统：提交验证结果
+验证日期：2026-10-24（Asia/Shanghai）
+
+1. frontend/：pnpm test
+   结果：35 项通过，0 项失败。
+2. frontend/：pnpm build
+   结果：成功；Vue 构建资源已包含在 src/main/resources/static/。
+3. 项目根目录：.\mvnw.cmd clean package -DskipTests
+   结果：BUILD SUCCESS，生成 study-plan-system-1.0.0.jar。
+   说明：此命令跳过测试；测试另行执行并记录于第 4 项。
+4. 提交副本根目录：.\mvnw.cmd test
+   结果：BUILD SUCCESS；66 项通过，Failures 0，Errors 0，Skipped 0。
+   说明：首次沙箱运行受到 Java 测试工具附加管道权限限制；在获准的本机运行环境中重新执行成功。
+
+验证使用：JDK 21.0.12.1、Node.js 24.21.0、Maven Wrapper。
+源码编译目标：Java 17。
+当前提交目录与 Git 历史中常见 GitHub Token、API Key 和私钥格式扫描：未发现匹配项。
+
+边界：本次整理未执行数据库 SQL，未连接实际数据库做业务联调，未调用真实 AI API。
+数据库初始化、运行配置及启动步骤见 SUBMISSION.md。

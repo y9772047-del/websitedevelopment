@@ -7,11 +7,13 @@ import com.example.studyplan.entity.Feedback;
 import com.example.studyplan.entity.StudyPlan;
 import com.example.studyplan.entity.StudyTask;
 import com.example.studyplan.entity.User;
+import com.example.studyplan.mapper.RbacMapper;
 import com.example.studyplan.service.FeedbackService;
 import com.example.studyplan.service.StudyPlanService;
 import com.example.studyplan.service.StudyTaskService;
 import com.example.studyplan.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,20 +25,24 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
+@PreAuthorize("hasAuthority('admin:access')")
 public class AdminController {
     private final UserService userService;
     private final StudyTaskService taskService;
     private final StudyPlanService planService;
     private final FeedbackService feedbackService;
+    private final RbacMapper rbacMapper;
 
     public AdminController(UserService userService,
                            StudyTaskService taskService,
                            StudyPlanService planService,
-                           FeedbackService feedbackService) {
+                           FeedbackService feedbackService,
+                           RbacMapper rbacMapper) {
         this.userService = userService;
         this.taskService = taskService;
         this.planService = planService;
         this.feedbackService = feedbackService;
+        this.rbacMapper = rbacMapper;
     }
 
     @GetMapping("/dashboard/stats")
@@ -108,13 +114,14 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}/status")
+    @PreAuthorize("hasAuthority('admin:access') and hasAuthority('users:manage')")
     public Result<Void> updateUserStatus(@PathVariable("id") Long id, @RequestBody User update, HttpSession session) {
         User target = userService.getById(id);
         User current = SessionUtil.currentUser(session);
         if (target == null) {
             return Result.fail("用户不存在");
         }
-        if ("admin".equals(target.getRole())) {
+        if (rbacMapper.rolesForUser(id).contains("admin")) {
             return Result.fail("不能禁用管理员账号");
         }
         if (current != null && current.getId().equals(id)) {
@@ -169,6 +176,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/tasks/{id}")
+    @PreAuthorize("hasAuthority('admin:access') and hasAuthority('tasks:manage')")
     public Result<Void> deleteTask(@PathVariable("id") Long id) {
         StudyTask task = taskService.getById(id);
         if (task == null) {
@@ -204,6 +212,7 @@ public class AdminController {
     }
 
     @PutMapping("/feedbacks/{id}")
+    @PreAuthorize("hasAuthority('admin:access') and hasAuthority('feedback:manage')")
     public Result<Void> updateFeedback(@PathVariable("id") Long id, @RequestBody Feedback update) {
         Feedback feedback = feedbackService.getById(id);
         if (feedback == null) {

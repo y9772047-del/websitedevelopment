@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export function createApi(baseURL) {
-  const client = axios.create({ baseURL, withCredentials: true, timeout: 15000 });
+  const client = axios.create({ baseURL, withCredentials: true, withXSRFToken: true, timeout: 15000 });
   client.interceptors.response.use(response => {
     if (response.data?.success !== true) {
       throw new Error(response.data?.message || '请求失败');

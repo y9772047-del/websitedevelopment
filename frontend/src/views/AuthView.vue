@@ -81,7 +81,7 @@ function passwordHelp() {
         <fieldset :disabled="busy">
           <div class="mb-3"><label class="form-label" for="registerUsername">用户名</label><input id="registerUsername" v-model="registration.username" class="form-control" name="username" placeholder="例如 student02" required maxlength="50" autocomplete="username"></div>
           <div class="mb-3"><label class="form-label" for="registerName">姓名</label><input id="registerName" v-model="registration.realName" class="form-control" name="realName" placeholder="请输入姓名" maxlength="50" autocomplete="name"></div>
-          <div class="mb-4"><label class="form-label" for="registerPassword">密码</label><input id="registerPassword" v-model="registration.password" class="form-control" name="password" type="password" placeholder="请设置密码" required maxlength="100" autocomplete="new-password"></div>
+          <div class="mb-4"><label class="form-label" for="registerPassword">密码</label><input id="registerPassword" v-model="registration.password" class="form-control" name="password" type="password" placeholder="请设置密码（至少 8 位）" required minlength="8" maxlength="72" autocomplete="new-password"></div>
           <button class="btn btn-primary w-100" type="submit">{{ busy ? '创建中…' : '创建账号' }}</button>
         </fieldset>
       </form>

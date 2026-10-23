@@ -1,5 +1,8 @@
 # 大学生学习计划管理系统 MVP
 
+> 课程提交版：环境配置、数据库导入、启动命令和演示账号见 [SUBMISSION.md](SUBMISSION.md)。
+
+
 本项目是软件工程课程项目 MVP，技术栈为 Spring Boot + Maven + MySQL + MyBatis-Plus，前端使用 Vue 3、Vite、Axios 和 Bootstrap 5 CDN。Vue 可独立构建部署，也可由 Spring Boot 同源提供构建资源。
 
 ## 本次模块调整说明
@@ -18,7 +21,7 @@
 ## 运行步骤
 
 1. 确认本机 MySQL 已启动。
-2. 仅在全新数据库中执行 `src/main/resources/db/schema.sql`；该初始化脚本包含 `DROP TABLE`，已有数据时不要重新执行。
+2. 仅在全新数据库中执行 `src/main/resources/db/schema.sql`；该初始化脚本包含 `DROP TABLE`，已有数据时不要重新执行。已有数据库升级实验四时，先备份数据库，再执行 `src/main/resources/db/experiment4_auth_upgrade.sql`；首次启动会将旧用户的明文密码转换为 BCrypt 哈希。
 3. 检查 `src/main/resources/application.yml` 中的数据库配置：
 
 ```yaml
@@ -30,15 +33,16 @@ spring:
 
 4. 已提交的 `src/main/resources/static` 包含 Vue 构建结果；如修改了 `frontend/`，先在该目录运行 `pnpm install --frozen-lockfile` 和 `pnpm build`。`pnpm build` 会更新 Spring Boot 的静态资源。`npm install` 和 `npm run build` 也可用于本地构建。
 5. 使用 IntelliJ IDEA 打开项目，等待 Maven 依赖下载完成。
-6. 设置环境变量 `DB_PASSWORD`，然后运行 `com.example.studyplan.StudyPlanSystemApplication`。也可以在项目根目录使用 PowerShell 启动：
+6. 设置环境变量 `DB_PASSWORD` 和至少 32 字节的 `JWT_SECRET`，然后运行 `com.example.studyplan.StudyPlanSystemApplication`。也可以在项目根目录使用 PowerShell 启动：
 
 ```powershell
 $env:DB_PASSWORD = "你的本机 MySQL 密码"
+$env:JWT_SECRET = "请替换成至少32字节的随机密钥"
 # 需要 AI 目标复盘时再设置：
 $env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
 .\mvnw.cmd spring-boot:run
 ```
-7. 浏览器访问 `http://localhost:8080`。开发模式可在 `frontend/` 运行 `pnpm dev`，访问 `http://localhost:5173`；API 默认连接 `http://localhost:8080/api`。独立生产构建可用 `pnpm build:standalone` 生成 `frontend/dist/`，需在构建前设置 `VITE_API_BASE_URL`；命令与跨域配置见 [实验二说明](docs/experiment-2/README.md)。
+7. 浏览器访问 `http://localhost:8080`。开发模式可在 `frontend/` 运行 `pnpm dev`，访问 `http://localhost:5173`；API 默认连接 `http://localhost:8080/api`。独立生产构建可用 `pnpm build:standalone` 生成 `frontend/dist/`，需在构建前设置 `VITE_API_BASE_URL`；前端和 API 必须使用同一主机名以共享 CSRF Cookie（端口可不同），生产环境推荐同一主机名的 HTTPS 反向代理。命令与跨域配置见 [实验二说明](docs/experiment-2/README.md)。
 
 ## 测试账号
 
@@ -60,7 +64,7 @@ $env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
 
 ## 已实现功能
 
-- 登录、注册、退出登录，使用 Session 保存登录状态。
+- 登录、注册、退出登录，使用 BCrypt 密码哈希、Spring Security 权限控制和 `HttpOnly` Cookie 中的短期 JWT；写操作使用 CSRF 令牌。
 - 学习计划基本增删改查。
 - 学习计划详情展示左到右的目标树；任务可独立收放，同时展开多个任务后查看各自的学习记录。
 - 学习计划详情可根据至少 2 条关联记录按需生成 AI 目标复盘；使用时需要设置 `DEEPSEEK_API_KEY`。
@@ -77,6 +81,7 @@ $env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
 ## 数据库表
 
 - `user`：用户表。
+- `role`、`permission`、`user_role`、`role_permission`：角色、权限及其关联。
 - `study_plan`：学习计划表。
 - `study_task`：学习任务表。
 - `study_record`：学习记录表，包含学习过程、问题与反思、改进计划。
@@ -86,8 +91,9 @@ $env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
 
 - [实验二：Vue 前后端分离与 RESTful API](docs/experiment-2/README.md)
 - [实验三：Git 协作与持续集成](docs/experiment-3/README.md)
+- [实验四：登录、权限与 AI 安全](docs/experiment-4/README.md)
 - [助教演示：GitHub 操作与讲解指南](docs/experiment-3/demo-guide.md)
 
 ## 说明
 
-MySQL 连接口令通过 `DB_PASSWORD` 环境变量提供，不写入 `application.yml`。这与登录用户的密码存储是两回事：当前课程示例的 `user.password` 仍由后端直接保存并匹配，初始化 SQL 也使用演示密码。正式部署前应设计存量账号迁移，改用 BCrypt 等密码哈希，并补充更严格的参数校验和异常处理。
+MySQL 连接口令和 JWT 签名密钥分别通过 `DB_PASSWORD`、`JWT_SECRET` 环境变量提供，不写入仓库。`user.password` 只保存 BCrypt 哈希。未设置 `JWT_SECRET` 时开发环境会生成仅本次进程有效的随机密钥，重启后须重新登录；正式部署必须设置稳定的随机密钥并使用 HTTPS。
