@@ -8,6 +8,12 @@ try {
   workflow = {};
 }
 
+test('category edit payload trims names and rejects blank or oversized names', () => {
+  assert.deepEqual(workflow.prepareCategory({ categoryName: '  阅读  ', userId: 999 }), { categoryName: '阅读' });
+  assert.throws(() => workflow.prepareCategory({ categoryName: '   ' }), /分类名称/);
+  assert.throws(() => workflow.prepareCategory({ categoryName: '字'.repeat(51) }), /50/);
+});
+
 test('task payload keeps editable fields and normalizes defaults', () => {
   assert.equal(typeof workflow.prepareTask, 'function');
   assert.deepEqual(workflow.prepareTask({
@@ -66,6 +72,24 @@ test('record payload converts numeric fields and rejects missing content', () =>
   }), /学习内容/);
 });
 
+test('quick capture parses a plan with multiple tasks and their records', () => {
+  assert.equal(typeof workflow.prepareQuickCapture, 'function');
+  assert.deepEqual(workflow.prepareQuickCapture({
+    planName: '考试复习', goal: '通过考试', startDate: '2026-11-22', endDate: '2026-12-10',
+    tasks: [{
+      taskName: '复习需求分析', category: '课程进度', deadline: '2026-11-25',
+      record: { studyDate: '2026-11-22', duration: '45', content: '整理章节', problems: '图还不熟' }
+    }]
+  }), {
+    plan: { planName: '考试复习', goal: '通过考试', description: '', startDate: '2026-11-22', endDate: '2026-12-10', status: '进行中' },
+    tasks: [{
+      task: { taskName: '复习需求分析', category: '课程进度', priority: 'Q2', deadline: '2026-11-25',
+      status: '未完成', description: '', repeatType: 'NONE', repeatEndDate: null, reminderEnabled: true, reminderDaysBefore: 3 },
+      record: { studyDate: '2026-11-22', duration: 45, content: '整理章节', completionStatus: '部分完成', problems: '图还不熟', improvementPlan: '' }
+    }]
+  });
+});
+
 test('AI request derives plan and task context without private fields', () => {
   assert.equal(typeof workflow.buildRecordAiRequest, 'function');
   assert.deepEqual(workflow.buildRecordAiRequest(
@@ -77,4 +101,18 @@ test('AI request derives plan and task context without private fields', () => {
     studyContent: '控制器', completion: '部分完成',
     problems: '跨域失败', problemSummary: '跨域失败'
   });
+});
+
+
+test('text capture associates records and rejects unknown categories and malformed lines', () => {
+  const source = '目标：通过考试\n计划：复习\n时间：2026-11-22 至 2026-12-10\n任务：章节一\n分类：阅读\n状态：已完成\n记录：整理章节\n问题：不熟悉\n反思：再练习\n任务：章节二';
+  const result = workflow.parseQuickCapture(source, ['阅读', '其他任务'], '2026-11-22');
+  assert.equal(result.plan.goal, '通过考试');
+  assert.equal(result.tasks.length, 2);
+  assert.equal(result.tasks[0].record.improvementPlan, '再练习');
+  assert.equal(result.tasks[0].record.studyDate, '2026-11-22');
+  assert.equal(result.tasks[0].record.completionStatus, '已完成');
+  assert.equal(result.tasks[1].record, undefined);
+  assert.throws(() => workflow.parseQuickCapture(source, ['其他任务']), /分类/);
+  assert.throws(() => workflow.parseQuickCapture(source + '\n错别字段：内容', ['阅读', '其他任务']), /行/);
 });

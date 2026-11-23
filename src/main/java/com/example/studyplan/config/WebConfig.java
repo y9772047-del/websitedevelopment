@@ -16,8 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     // Process preflight before MVC login/admin interceptors; actual requests still use them.
     @org.springframework.context.annotation.Bean
-    @org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
-    public org.springframework.web.filter.CorsFilter apiCorsFilter(
+    public org.springframework.web.cors.UrlBasedCorsConfigurationSource corsConfigurationSource(
             @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:4173}") String origins) {
         var config = new org.springframework.web.cors.CorsConfiguration();
         var allowedOrigins = java.util.Arrays.stream(origins.split(","))
@@ -27,12 +26,12 @@ public class WebConfig implements WebMvcConfigurer {
         }
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(java.util.List.of("Content-Type", "Accept"));
+        config.setAllowedHeaders(java.util.List.of("Content-Type", "Accept", "X-XSRF-TOKEN"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
         var source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
-        return new org.springframework.web.filter.CorsFilter(source);
+        return source;
     }
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

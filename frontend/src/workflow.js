@@ -1,3 +1,5 @@
+import { preparePlan } from './plan.js';
+
 const TASK_PRIORITIES = ['Q0', 'Q1', 'Q2', 'Q3'];
 const TASK_STATUSES = ['未完成', '进行中', '已完成', '延期'];
 const REPEAT_TYPES = ['NONE', 'DAILY', 'WEEKLY', 'WORKDAY'];
@@ -5,6 +7,13 @@ const RECORD_STATUSES = ['已完成', '部分完成', '未完成'];
 
 function text(value) {
   return String(value ?? '').trim();
+}
+
+export function prepareCategory(input) {
+  const categoryName = text(input.categoryName);
+  if (!categoryName) throw new Error('分类名称不能为空');
+  if (categoryName.length > 50) throw new Error('分类名称不能超过 50 个字符');
+  return { categoryName };
 }
 
 function positiveId(value, label) {
@@ -107,4 +116,63 @@ export function buildRecordAiRequest(record, tasks, plans) {
     problems,
     problemSummary: problems
   };
+}
+
+export function prepareQuickCapture(input) {
+  const plan = preparePlan({ ...input, status: input.status || '进行中' });
+  if (!input.tasks?.length) throw new Error('至少填写一个任务');
+  const tasks = input.tasks.map(row => {
+    const { planId, ...task } = prepareTask({ ...row, planId: 1 });
+    const result = { task };
+    if (row.record) {
+      const { taskId, ...record } = prepareRecord({ ...row.record, taskId: 1 });
+      result.record = record;
+    }
+    return result;
+  });
+  return { plan, tasks };
+}
+
+export function parseQuickCapture(value, categories, today = new Date().toLocaleDateString('en-CA')) {
+  const input = { tasks: [] };
+  let current = null;
+  const seen = new Set();
+  const fields = { 分类: 'category', 截止: 'deadline', 状态: 'status', 优先级: 'priority', 描述: 'description' };
+  const recordFields = { 记录: 'content', 问题: 'problems', 反思: 'improvementPlan', 日期: 'studyDate', 时长: 'duration' };
+  String(value ?? '').split(/\r?\n/).forEach((line, index) => {
+    if (!line.trim()) return;
+    const match = line.match(/^\s*([^：:]+)[：:]\s*(.*?)\s*$/);
+    const fail = message => { throw new Error('第 ' + (index + 1) + ' 行：' + message); };
+    if (!match) fail('请使用 字段：内容 格式');
+    const [, keyText, content] = match;
+    const key = keyText.trim();
+    if (key === '任务') {
+      current = { taskName: content, category: categories.includes('其他任务') ? '其他任务' : categories[0] };
+      input.tasks.push(current); seen.clear(); return;
+    }
+    if (seen.has(key)) fail('字段重复：' + key);
+    seen.add(key);
+    if (['目标', '计划', '时间'].includes(key)) {
+      if (current) fail('计划信息应放在第一个任务之前');
+      if (key === '目标') input.goal = content;
+      if (key === '计划') input.planName = content;
+      if (key === '时间') {
+        const range = content.match(/^(\d{4}-\d{2}-\d{2})\s*至\s*(\d{4}-\d{2}-\d{2})$/);
+        if (!range) fail('时间格式为 YYYY-MM-DD 至 YYYY-MM-DD');
+        [, input.startDate, input.endDate] = range;
+      }
+    } else if (Object.hasOwn(fields, key)) {
+      if (!current) fail('请先填写任务');
+      current[fields[key]] = content;
+    } else if (Object.hasOwn(recordFields, key)) {
+      if (!current) fail('请先填写任务');
+      current.record ||= { studyDate: today, duration: 0 };
+      current.record[recordFields[key]] = content;
+    } else fail('未知字段：' + key);
+  });
+  input.tasks.forEach(row => {
+    if (!categories.includes(row.category)) throw new Error('分类不存在，请先创建分类：' + row.category);
+    if (row.record) row.record.completionStatus = row.status === '已完成' ? '已完成' : '部分完成';
+  });
+  return prepareQuickCapture(input);
 }

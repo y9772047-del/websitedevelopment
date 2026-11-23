@@ -1,12 +1,16 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
-import { buildDashboardHeatmap, buildDashboardReminders, calculatePlanInvestment, summarizeTasks } from '../insights.js';
+import { buildDashboardHeatmap, buildDashboardReminders, calculatePlanInvestment, summarizeTasks, summarizeCategories } from '../insights.js';
+import { loadDashboardData } from '../dashboardData.js';
 
 const props = defineProps({ api: { type: Function, required: true } });
 const emit = defineEmits(['session-expired', 'busy-change']);
 const dashboard = ref({}), plans = ref([]), tasks = ref([]), records = ref([]);
-const busy = ref(false), error = ref(''), investmentRange = ref('30'), heatmapFilter = ref('全部');
-const heatmapFilters = ['全部', '课业完成型', '成绩提升型', '成长拓展型', '综合提升型'];
+const busy = ref(false), error = ref(''), investmentRange = ref('30');
+const categories = ref([]), selectedCategory = ref('');
+const categoryStats = computed(() => summarizeCategories(tasks.value, categories.value));
+const dataReady = ref(false), loadErrors = ref({});
+const coreReady = computed(() => dataReady.value && !['plans', 'tasks', 'records'].some(key => loadErrors.value[key]));
 const colors = ['#f05f7d','#5fbf8f','#f4a62a','#5c8df6','#9b70d9','#42b8c6','#e66bb5','#7a9a3f'];
 const today = () => new Date().toLocaleDateString('en-CA');
 const summary = computed(() => summarizeTasks(tasks.value, today()));
@@ -16,7 +20,7 @@ const todayTasks = computed(() => tasks.value.filter(task => task.status !== '�
 const overdueTasks = computed(() => tasks.value.filter(task => task.status !== '已完成' && task.deadline && task.deadline < today()));
 const latestImprovement = computed(() => (dashboard.value.recentRecords || records.value).find(record => String(record.improvementPlan || '').trim()));
 const reminders = computed(() => buildDashboardReminders(tasks.value, today()));
-const heatmap = computed(() => buildDashboardHeatmap(records.value, tasks.value, heatmapFilter.value, today()));
+const heatmap = computed(() => buildDashboardHeatmap(records.value, tasks.value, selectedCategory.value, today()));
 const heatmapMinutes = computed(() => heatmap.value.reduce((sum, cell) => sum + cell.minutes, 0));
 function rangeStart(days) {
   if (!days) return null;
@@ -47,7 +51,7 @@ function planName(id) { return planMap.value[id]?.planName || '未关联计划';
 function hours(minutes) { return (Math.round(Number(minutes || 0) / 6) / 10).toFixed(1); }
 function heatmapTitle(cell) {
   if (!cell.inRange) return '范围外日期';
-  return cell.date + ' · ' + (cell.count ? cell.minutes + ' 分钟 · ' + cell.count + ' 条学习记录' : '暂无学习记录') + ' · ' + heatmapFilter.value;
+  return cell.date + ' · ' + (cell.count ? cell.minutes + ' 分钟 · ' + cell.count + ' 条学习记录' : '暂无学习记录') + ' · ' + (selectedCategory.value || '全部分类');
 }
 async function run(action) {
   if (busy.value) return;
@@ -57,9 +61,13 @@ async function run(action) {
   finally { busy.value = false; emit('busy-change', false); }
 }
 async function loadAll() {
-  [dashboard.value, plans.value, tasks.value, records.value] = await Promise.all([
-    props.api.get('/dashboard'), props.api.get('/plans'), props.api.get('/tasks'), props.api.get('/records')
-  ]);
+  const targets = { dashboard, plans, tasks, records, categories };
+  const { failures } = await loadDashboardData(props.api, (key, value) => { targets[key].value = value; });
+  loadErrors.value = failures; dataReady.value = true;
+  const expired = Object.values(failures).find(failure => failure.status === 401);
+  if (expired) throw expired;
+  const labels = { dashboard: '首页摘要', plans: '计划', tasks: '任务', records: '学习记录', categories: '个人分类' };
+  error.value = Object.entries(failures).map(([key, failure]) => labels[key] + '加载失败：' + failure.message).join('；');
 }
 defineExpose({ refresh: () => run(loadAll) });
 onMounted(() => run(loadAll));
@@ -69,10 +77,14 @@ onMounted(() => run(loadAll));
   <main class="container-fluid app-shell">
     <header class="page-heading"><div><span class="soft-label">Dashboard</span><h1 class="page-title">首页 / 仪表盘</h1></div><button class="btn btn-outline-primary btn-sm" :disabled="busy" @click="run(loadAll)">刷新</button></header>
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p>
+    <p v-if="!dataReady" class="muted-text" role="status">正在加载统计…</p>
+    <p v-else-if="!coreReady" class="muted-text">统计数据未加载完整，请刷新重试。</p>
+    <p v-if="loadErrors.categories && coreReady" class="muted-text">个人分类列表暂不可用，当前按已有任务的实际分类统计。</p>
+    <template v-if="coreReady">
     <section class="row g-3 mb-4 dashboard-metrics">
       <div v-for="item in [
-        ['计划总数', dashboard.planCount || 0], ['任务总数', dashboard.taskCount || 0],
-        ['已完成任务', dashboard.completedTaskCount || 0], ['逾期任务', dashboard.overdueTaskCount || 0]
+        ['计划总数', plans.length], ['任务总数', summary.total],
+        ['已完成任务', summary.completed], ['逾期任务', summary.overdue]
       ]" :key="item[0]" class="col-sm-6 col-xl-3"><div class="metric-card"><span>{{ item[0] }}</span><strong>{{ item[1] }}</strong></div></div>
     </section>
 
@@ -88,9 +100,12 @@ onMounted(() => run(loadAll));
     </section>
 
     <section class="dashboard-chart-grid mb-4">
-      <div class="content-card chart-card category-heatmap"><div class="card-title-row"><div><h2>分类学习热力图</h2><p class="muted-text mb-0">{{ heatmapFilter }} · 近 180 天累计 {{ hours(heatmapMinutes) }} 小时</p></div><div class="category-heatmap-filters"><button v-for="filter in heatmapFilters" :key="filter" class="heatmap-filter-btn" :class="{ active: heatmapFilter === filter }" @click="heatmapFilter = filter">{{ filter }}</button></div></div>
+      <div class="content-card chart-card category-heatmap"><div class="card-title-row"><div><h2>分类学习热力图</h2><p class="muted-text mb-0">{{ selectedCategory || '全部分类' }} · 近 180 天累计 {{ hours(heatmapMinutes) }} 小时</p></div></div>
+        <label for="heatmap-category" class="form-label">我的任务分类</label><select id="heatmap-category" v-model="selectedCategory" class="form-select mb-3"><option value="">全部分类</option><option v-for="item in categoryStats" :key="item.name" :value="item.name">{{ item.name }}</option></select>
         <div class="heatmap-board"><div class="heatmap-week-labels"><span v-for="label in ['周一','周二','周三','周四','周五','周六','周日']" :key="label">{{ label }}</span></div><div class="heatmap-scroll"><div class="heatmap-grid"><span v-for="cell in heatmap" :key="cell.date" class="heatmap-cell" :class="['heatmap-level-' + cell.level, { 'out-of-range': !cell.inRange }]" :title="heatmapTitle(cell)" :aria-label="heatmapTitle(cell)"></span></div></div></div>
         <div class="heatmap-legend"><span>少</span><i v-for="level in [0,1,2,3,4,5]" :key="level" class="heatmap-swatch" :class="'heatmap-level-' + level"></i><span>多</span></div>
+        <h2 class="mt-3">分类完成情况</h2>
+        <div class="table-responsive"><table class="table app-table"><thead><tr><th>分类</th><th>任务数</th><th>已完成</th><th>完成率</th></tr></thead><tbody><tr v-for="item in categoryStats" :key="item.name"><td>{{ item.name }}</td><td>{{ item.total }}</td><td>{{ item.completed }}</td><td>{{ item.percent }}%</td></tr></tbody></table></div>
       </div>
       <div class="content-card chart-card plan-investment-card"><div class="card-title-row"><div><h2>学习计划投入分布</h2><p class="muted-text mb-0">按学习记录统计当前时间范围内的累计学习时长占比。</p></div><div class="plan-investment-range-buttons"><button v-for="item in [['30','最近30天'],['180','最近180天'],['all','全部']]" :key="item[0]" class="plan-investment-range-btn" :class="{ active: investmentRange === item[0] }" @click="investmentRange = item[0]">{{ item[1] }}</button></div></div>
         <div class="plan-investment-body"><div class="plan-investment-donut-wrap"><div class="plan-investment-donut" :style="donutStyle"></div><div class="plan-investment-center"><strong>{{ hours(investmentTotal) }} 小时</strong><span>总学习时长</span></div></div><div><div class="plan-investment-summary"><span>{{ investmentRange === 'all' ? '全部' : '最近' + investmentRange + '天' }}</span><small>{{ visibleInvestments.length }} 个计划</small></div><div class="plan-investment-legend"><div v-for="(item,index) in visibleInvestments" :key="item.planId" class="plan-investment-legend-item"><i :style="{ background: colors[index % colors.length] }"></i><span>{{ item.label }}</span><b class="plan-investment-progress"><u :style="{ width: item.percent + '%', background: colors[index % colors.length] }"></u></b><strong>{{ item.minutes }} 分钟</strong><em>{{ Math.round(item.percent * 10) / 10 }}%</em></div></div></div></div>
@@ -102,5 +117,6 @@ onMounted(() => run(loadAll));
       <div class="col-lg-6"><div class="content-card"><h2>最近学习记录</h2><div class="stack-list"><div v-for="record in (dashboard.recentRecords || [])" :key="record.id" class="list-row"><div><h3>{{ taskName(record.taskId) }}</h3><p>{{ record.studyDate }} · {{ record.duration || 0 }} 分钟</p><p v-if="record.improvementPlan">改进计划：{{ compact(record.improvementPlan,54) }}</p></div></div><div v-if="!(dashboard.recentRecords || []).length" class="list-row"><p>暂无学习记录。</p></div></div></div></div>
     </section>
 
+    </template>
   </main>
 </template>

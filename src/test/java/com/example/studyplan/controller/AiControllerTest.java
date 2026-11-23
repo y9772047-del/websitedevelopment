@@ -17,9 +17,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class AiControllerTest {
+
+    @Test
+    void generateImprovementRejectsOversizedUserTextBeforeCallingModel() {
+        AiService aiService = mock(AiService.class);
+        AiImprovementRequest request = new AiImprovementRequest();
+        request.setStudyContent("x".repeat(2001));
+
+        Result<AiImprovementResponse> result = new AiController(aiService)
+                .generateImprovement(request, mock(HttpSession.class));
+
+        assertThat(result.isSuccess()).isFalse();
+        verifyNoInteractions(aiService);
+    }
 
     @Test
     void generateImprovementAcceptsStudyContentWithoutProblems() {

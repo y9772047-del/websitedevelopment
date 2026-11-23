@@ -43,7 +43,7 @@ class TaskControllerTest {
         StudyPlanService planService = mock(StudyPlanService.class);
         HttpSession session = mockStudentSession();
         when(planService.exists(any(Wrapper.class))).thenReturn(true);
-        when(taskService.isValidCategory("随便写的分类")).thenReturn(false);
+        when(taskService.isValidCategory("随便写的分类", 9L)).thenReturn(false);
 
         StudyTask task = new StudyTask();
         task.setPlanId(3L);
@@ -65,7 +65,7 @@ class TaskControllerTest {
         StudyPlanService planService = mock(StudyPlanService.class);
         HttpSession session = mockStudentSession();
         when(planService.exists(any(Wrapper.class))).thenReturn(true);
-        when(taskService.isValidCategory(StudyTaskService.DEFAULT_CATEGORY)).thenReturn(true);
+        when(taskService.isValidCategory("其他任务", 9L)).thenReturn(true);
 
         StudyTask task = new StudyTask();
         task.setPlanId(3L);
@@ -76,7 +76,7 @@ class TaskControllerTest {
         Result<StudyTask> result = controller.add(task, session);
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(task.getCategory()).isEqualTo(StudyTaskService.DEFAULT_CATEGORY);
+        assertThat(task.getCategory()).isEqualTo("其他任务");
         verify(taskService).save(task);
     }
 
@@ -87,7 +87,7 @@ class TaskControllerTest {
         StudyPlanService planService = mock(StudyPlanService.class);
         HttpSession session = mockStudentSession();
         when(planService.exists(any(Wrapper.class))).thenReturn(true);
-        when(taskService.isValidCategory(StudyTaskService.DEFAULT_CATEGORY)).thenReturn(true);
+        when(taskService.isValidCategory(StudyTaskService.DEFAULT_CATEGORY, 9L)).thenReturn(true);
 
         StudyTask task = new StudyTask();
         task.setPlanId(3L);

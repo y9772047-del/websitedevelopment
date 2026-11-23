@@ -184,12 +184,6 @@ export function calculatePlanInvestment(records = [], tasks = [], plans = [], st
     }))
     .sort((left, right) => right.minutes - left.minutes);
 }
-const HEATMAP_CATEGORIES = {
-  '课业完成型': ['课程进度', '作业实验'],
-  '成绩提升型': ['考试备考', '复盘总结'],
-  '成长拓展型': ['竞赛科研', '专业能力'],
-  '综合提升型': ['自我提升']
-};
 
 export function buildDashboardReminders(tasks = [], today = isoDate(new Date())) {
   const todayTime = Date.parse(today + 'T00:00:00Z');
@@ -203,7 +197,15 @@ export function buildDashboardReminders(tasks = [], today = isoDate(new Date()))
     || String(left.task.deadline).localeCompare(String(right.task.deadline))).slice(0, 6);
 }
 
-export function buildDashboardHeatmap(records = [], tasks = [], filter = '全部', today = isoDate(new Date())) {
+export function summarizeCategories(tasks = [], categories = []) {
+  return [...new Set([...categories, ...tasks.map(task => task.category || '其他任务')])].map(name => {
+    const matching = tasks.filter(task => (task.category || '其他任务') === name);
+    const completed = matching.filter(task => task.status === '已完成').length;
+    return { name, total: matching.length, completed, percent: matching.length ? Math.round(completed / matching.length * 100) : 0 };
+  });
+}
+
+export function buildDashboardHeatmap(records = [], tasks = [], filter = '', today = isoDate(new Date())) {
   const end = Date.parse(today + 'T00:00:00Z');
   const start = end - 179 * 86400000;
   const firstWeekday = (new Date(start).getUTCDay() + 6) % 7;
@@ -211,7 +213,7 @@ export function buildDashboardHeatmap(records = [], tasks = [], filter = '全部
   const lastWeekday = (new Date(end).getUTCDay() + 6) % 7;
   const displayEnd = end + (6 - lastWeekday) * 86400000;
   const taskMap = new Map(tasks.map(task => [String(task.id), task]));
-  const allowed = HEATMAP_CATEGORIES[filter];
+  const allowed = filter === '' ? null : [filter];
   const totals = new Map();
   records.forEach(record => {
     const time = Date.parse(text(record.studyDate) + 'T00:00:00Z');

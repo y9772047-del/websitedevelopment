@@ -12,10 +12,14 @@
 ## 后端
 
 - 启动类：`src/main/java/com/example/studyplan/StudyPlanSystemApplication.java`。
-- 接口：`src/main/java/com/example/studyplan/controller/`。`AuthController` 提供登录/注册/会话，`PlanController`、`TaskController`、`RecordController`、`DashboardController`、`CalendarController`、`StatisticsController`、`ImportantNodeController`、`ImportantNodeKeywordRuleController`、`FeedbackController`、`AiController`、`AdminController` 分别处理各业务 API。
+- 接口：`src/main/java/com/example/studyplan/controller/`。`AuthController` 提供登录/注册/JWT Cookie/当前用户，`PlanController`、`TaskController`、`RecordController`、`DashboardController`、`CalendarController`、`StatisticsController`、`ImportantNodeController`、`ImportantNodeKeywordRuleController`、`FeedbackController`、`AiController`、`AdminController` 分别处理各业务 API。
 - 业务逻辑：`service/` 和 `service/impl/`；数据库映射：`mapper/`；模型：`entity/`。
-- `config/WebConfig.java` 注册登录和管理员 API 拦截器，并配置开发模式下带凭证的 CORS。
+- `security/` 包提供 JWT 签发校验、Spring Security、CSRF、角色权限加载和旧密码迁移；`config/WebConfig.java` 注册兼容拦截器并配置开发模式下带凭证的 CORS。
+- `mapper/RbacMapper.java` 查询用户角色与权限；`db/experiment4_auth_upgrade.sql` 为已有数据库增量建立 RBAC 表，`db/schema.sql` 用于全新数据库。
 - 数据库建表与升级脚本：`src/main/resources/db/`；连接配置：`src/main/resources/application.yml`。
+- 任务 2：`TaskController` 提供 `/tasks/categories/available`、`/tasks/categories/templates`、`POST /tasks/categories` 和事务性 `/tasks/quick-capture`；`QuickCaptureRequest` 定义整组载荷；`UserTaskCategory` / `UserTaskCategoryMapper` 是个人 DIY 分类来源。`/templates` 提供大学生、打工人推荐，原全局分类仅作为大学生推荐目录。已有数据库执行 `db/task2_categories_upgrade.sql`，为已有账号保留原分类及历史任务分类。
+- 任务 3：`GET /tasks/categories/mine` 返回本人分类和全部任务数（`dto/TaskCategorySummary`），`PUT /tasks/categories/{id}` 改名并更新本人任务，`DELETE /tasks/categories/{id}?replacementId=...` 将已有任务迁入另一本人分类后删除。事务逻辑在 `StudyTaskServiceImpl`；使用现有分类表，无新增数据库结构。
+- 分类查询、新增、改名和删除统一经 `StudyTaskService` 业务接口进入实现，`TaskController` 不直接依赖 Mapper；命名校验和重名查询在实现中复用。
 
 ## Vue 前端
 
@@ -23,10 +27,11 @@
 - `frontend/src/views/AuthView.vue`：登录和注册。
 - `PlansView.vue` 与 `components/PlanForm.vue`：计划；计划详情内的 `components/PlanHierarchy.vue` 与 `planTree.js`：计划 → 任务 → 记录的完整目标树及目标级 AI 复盘；`TasksView.vue`：任务；`RecordsView.vue`：学习记录、AI 改进建议和周报。
 - `DashboardView.vue`：首页指标、焦点提醒、分类热力图及投入分布；重复的学习统计区块已移除。
+- `TasksView.vue`：统一个人 DIY 分类、行内修改及紧随分类行的删除迁移确认、可逐项添加的大学生/打工人推荐、文本快速收集预览；分类区域使用组件内 scoped 响应式样式。`workflow.js` 校验分类名称并复用 `plan.js` 校验整组导入；`insights.js` 按实际分类统计完成率和热力图；`dashboardData.js` 独立加载首页各资源，分类失败不丢弃计划、任务、记录。
 - `CalendarView.vue` 与 `ImportantNodesView.vue`：日历、重要节点和关键词规则。
 - `FeedbackView.vue`、`ThemeView.vue`：意见反馈和主题。
 - `AdminPortal.vue` 与 `Admin*View.vue`：管理员页面。
-- `frontend/src/api.js`：Axios、Session 凭证与错误处理。`plan.js`、`workflow.js`、`insights.js` 和 `portal.js`：表单字段、日期、批量导入、统计与主题规则。
+- `frontend/src/api.js`：Axios、JWT Cookie 凭证、CSRF 请求头与错误处理。`plan.js`、`workflow.js`、`insights.js` 和 `portal.js`：表单字段、日期、批量导入、统计与主题规则。
 - `frontend/src/styles/`：原有视觉样式已经迁入 Vue 源码，保留既有外观。
 
 ## 持续集成

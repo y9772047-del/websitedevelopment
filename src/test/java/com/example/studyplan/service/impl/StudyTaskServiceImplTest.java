@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class StudyTaskServiceImplTest {
 
     @Test
-    void normalizeLegacyCategoriesBackfillsBlankAndInvalidTasks() {
+    void normalizeLegacyCategoriesBackfillsOnlyBlankTasks() {
         StudyTaskCategoryMapper categoryMapper = mock(StudyTaskCategoryMapper.class);
         StudyTaskMapper taskMapper = mock(StudyTaskMapper.class);
         StudyTaskServiceImpl service = new StudyTaskServiceImpl(categoryMapper, mock(StudyRecordMapper.class), mock(StudyPlanMapper.class));
@@ -39,6 +39,31 @@ class StudyTaskServiceImplTest {
 
         assertThat(updatedRows).isEqualTo(3);
         verify(taskMapper).update(isNull(), any(UpdateWrapper.class));
+        var capture = org.mockito.ArgumentCaptor.forClass(UpdateWrapper.class);
+        verify(taskMapper).update(isNull(), capture.capture());
+        assertThat(capture.getValue().getSqlSegment()).doesNotContain("NOT IN");
+    }
+
+    @Test
+    void availableCategoriesUseOnlyThePersonalListAndDoNotInjectRecommendations() {
+        var categoryMapper = mock(StudyTaskCategoryMapper.class);
+        var userMapper = mock(com.example.studyplan.mapper.UserTaskCategoryMapper.class);
+        com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(
+                new org.apache.ibatis.builder.MapperBuilderAssistant(new com.baomidou.mybatisplus.core.MybatisConfiguration(), "test"),
+                com.example.studyplan.entity.UserTaskCategory.class);
+        when(categoryMapper.selectList(any())).thenReturn(List.of(category("课程进度", 1), category("其他任务", 8)));
+        when(userMapper.selectList(any())).thenAnswer(call -> {
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<?> query = call.getArgument(0);
+            assertThat(query.getSqlSegment()).contains("user_id =");
+            Long id = (Long) query.getParamNameValuePairs().values().iterator().next();
+            var custom = new com.example.studyplan.entity.UserTaskCategory();
+            custom.setCategoryName(id == 9L ? "健身" : "阅读");
+            return List.of(custom);
+        });
+        var service = new StudyTaskServiceImpl(categoryMapper, mock(StudyRecordMapper.class), mock(StudyPlanMapper.class), userMapper);
+        assertThat(service.listAvailableCategories(9L)).containsExactly("健身");
+        assertThat(service.listAvailableCategories(10L)).containsExactly("阅读");
+        assertThat(service.isValidCategory("健身", 10L)).isFalse();
     }
 
     @Test

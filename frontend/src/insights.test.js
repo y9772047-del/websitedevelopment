@@ -109,16 +109,23 @@ test('dashboard reminders only include overdue, today and next three days', () =
   ]);
 });
 
-test('dashboard heatmap keeps the original 180-day category range and week alignment', () => {
+test('dashboard heatmap keeps 180-day range and filters by actual category', () => {
   assert.equal(typeof insights.buildDashboardHeatmap, 'function');
   const cells = insights.buildDashboardHeatmap([
     { studyDate: '2026-09-24', taskId: 1, duration: 70 },
     { studyDate: '2026-09-24', taskId: 2, duration: 30 }
-  ], [{ id: 1, category: '课程进度' }, { id: 2, category: '竞赛科研' }], '课业完成型', '2026-09-24');
+  ], [{ id: 1, category: '课程进度' }, { id: 2, category: '竞赛科研' }], '课程进度', '2026-09-24');
   assert.equal(cells.filter(cell => cell.inRange).length, 180);
   assert.equal(cells.length % 7, 0);
   assert.equal(cells[0].weekdayIndex, 0);
   assert.equal(cells.find(cell => cell.date === '2026-09-24').minutes, 70);
+});
+
+test('category names matching former group labels remain ordinary DIY categories', () => {
+  const tasks = [{ id: 1, category: '课业完成型' }, { id: 2, category: '课程进度' }];
+  const records = [{ taskId: 1, studyDate: '2026-11-22', duration: 15 }, { taskId: 2, studyDate: '2026-11-22', duration: 60 }];
+  const cells = insights.buildDashboardHeatmap(records, tasks, '课业完成型', '2026-11-22');
+  assert.equal(cells.find(cell => cell.date === '2026-11-22').minutes, 15);
 });
 
 test('important nodes retain original month grouping and start-time order', () => {
@@ -140,4 +147,23 @@ test('important node date range includes years when it crosses New Year', () => 
   assert.equal(insights.formatImportantNodeDateTime({
     startDate: '2026-09-24', startTime: '09:00', endDate: '2026-09-24', endTime: '11:00'
   }), '09.24 09:00-11:00');
+});
+
+test('custom category heatmap excludes other task categories', () => {
+  const cells = insights.buildDashboardHeatmap([
+    { taskId: 1, studyDate: '2026-11-22', duration: 20 },
+    { taskId: 2, studyDate: '2026-11-22', duration: 80 }
+  ], [{ id: 1, category: '健身' }, { id: 2, category: '课程进度' }], '健身', '2026-11-22');
+  assert.equal(cells.find(cell => cell.date === '2026-11-22').minutes, 20);
+});
+
+test('category summary counts completion and includes unused custom categories', () => {
+  assert.deepEqual(insights.summarizeCategories([
+    { category: '健身', status: '已完成' }, { category: '健身', status: '未完成' },
+    { category: '旧分类', status: '已完成' }
+  ], ['健身', '阅读']), [
+    { name: '健身', total: 2, completed: 1, percent: 50 },
+    { name: '阅读', total: 0, completed: 0, percent: 0 },
+    { name: '旧分类', total: 1, completed: 1, percent: 100 }
+  ]);
 });
