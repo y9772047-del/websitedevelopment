@@ -833,6 +833,29 @@ button.calendar-cell:hover {
     margin-bottom: 0;
 }
 
+.records-view .btn-primary {
+    --bs-btn-disabled-bg: var(--primary);
+    --bs-btn-disabled-border-color: var(--primary);
+}
+
+.records-view .btn-outline-primary {
+    --bs-btn-active-bg: var(--primary-hover);
+    --bs-btn-active-border-color: var(--primary-hover);
+    --bs-btn-disabled-color: var(--primary);
+    --bs-btn-disabled-border-color: var(--primary);
+}
+
+.records-view .btn-primary:focus-visible,
+.records-view .btn-outline-primary:focus-visible {
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.records-view .record-ai-text,
+.records-view .ai-suggestion-box li {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 .ai-suggestion-box {
     padding: 14px 16px;
     border: 1px solid var(--border-soft);

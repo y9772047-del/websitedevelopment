@@ -103,6 +103,12 @@ export function prepareRecord(input) {
   };
 }
 
+export function formatAiText(text = '') {
+  const value = String(text ?? '');
+  if (!/^\s*1[.、．)）](?=[^\S\r\n]|[^\d\s])/.test(value)) return value;
+  return value.replace(/(?<=\S)[^\S\r\n]+(?=\d+[.、．)）](?=[^\S\r\n]|[^\d\s]))|(?<=[。！？；])(?=\d+[.、．)）](?=[^\S\r\n]|[^\d\s]))/g, '\n');
+}
+
 export function buildRecordAiRequest(record, tasks, plans) {
   const task = tasks.find(item => String(item.id) === String(record.taskId));
   const plan = task ? plans.find(item => String(item.id) === String(task.planId)) : null;

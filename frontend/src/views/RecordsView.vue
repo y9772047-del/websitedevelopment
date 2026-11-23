@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
-import { buildRecordAiRequest, prepareRecord } from '../workflow.js';
+import { buildRecordAiRequest, formatAiText, prepareRecord } from '../workflow.js';
 import { filterRecords } from '../records.js';
 
 const props = defineProps({ api: { type: Function, required: true } });
@@ -40,7 +40,7 @@ async function generateAi() {
   if (!payload.taskName) { aiTip.value = '请先选择学习任务。'; return; }
   if (!payload.studyContent && !payload.problems) { aiTip.value = '请先填写学习内容，或写下问题与反思。'; return; }
   aiBusy.value = true; emit('busy-change', true); error.value = ''; suggestions.value = []; aiTip.value = '正在根据本次学习记录生成改进计划。';
-  try { const result = await props.api.post('/ai/generate-improvement', payload); form.improvementPlan = result?.improvementPlan || ''; suggestions.value = Array.isArray(result?.suggestedActions) ? result.suggestedActions.filter(Boolean) : []; aiTip.value = '已生成（来源：' + (result?.generationSourceLabel || '未知来源') + '），请检查后保存。'; }
+  try { const result = await props.api.post('/ai/generate-improvement', payload); suggestions.value = Array.isArray(result?.suggestedActions) ? result.suggestedActions.filter(Boolean) : []; aiTip.value = '已生成（来源：' + (result?.generationSourceLabel || '未知来源') + '），请查看下方行动建议。'; }
   catch (failure) { if (failure.status === 401) emit('session-expired'); else error.value = failure.message; }
   finally { aiBusy.value = false; emit('busy-change', false); }
 }
@@ -56,7 +56,7 @@ defineExpose({ refresh: () => run(loadAll) });
 onMounted(() => run(loadAll));
 </script>
 <template>
-  <main class="container-fluid app-shell">
+  <main class="container-fluid app-shell records-view">
     <header class="page-heading"><div><span class="soft-label">Records</span><h1 class="page-title">学习记录管理</h1></div></header>
     <p v-if="error" class="alert alert-danger" role="alert">{{ error }}</p><p v-if="message" class="alert alert-success" role="status">{{ message }}</p>
     <section class="content-card mb-4"><h2>{{ editingId ? '编辑学习记录' : '记录表单' }}</h2>
@@ -73,7 +73,7 @@ onMounted(() => run(loadAll));
       </div></fieldset></form>
     </section>
     <section class="content-card mb-4"><div class="card-title-row"><div><h2>AI 周报</h2><p class="muted-text mb-0">根据最近 7 天学习记录生成总结、问题和下周建议。</p></div><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy || weeklyBusy" @click="generateWeeklyReport">{{ weeklyBusy ? '生成中…' : '生成 AI 周报' }}</button></div>
-      <div class="stack-list"><div v-if="weeklyBusy" class="list-row"><p>DeepSeek 正在生成周报，请稍候。</p></div><div v-else-if="weeklyError" class="list-row"><p role="alert">{{ weeklyError }}</p></div><template v-else-if="weeklyReport"><div class="list-row"><div><h3>本周总结</h3><p>{{ weeklyReport.weeklySummary || '暂无总结' }}</p></div></div><div class="list-row"><div><h3>主要问题</h3><p>{{ weeklyReport.mainProblems || '暂无明确问题' }}</p></div></div><div class="list-row"><div><h3>下周建议</h3><p>{{ weeklyReport.nextWeekSuggestions || '暂无建议' }}</p></div></div><div class="list-row"><div><h3>行动清单</h3><p>{{ (weeklyReport.suggestedActions || []).join('；') || '暂无行动清单' }}</p></div><span class="badge status-doing">{{ weeklyReport.generationSourceLabel || 'DeepSeek' }}</span></div></template><div v-else class="list-row"><p>点击按钮生成本周学习报告。</p></div></div>
+      <div class="stack-list"><div v-if="weeklyBusy" class="list-row"><p>DeepSeek 正在生成周报，请稍候。</p></div><div v-else-if="weeklyError" class="list-row"><p role="alert">{{ weeklyError }}</p></div><template v-else-if="weeklyReport"><div class="list-row"><div><h3>本周总结</h3><p class="record-ai-text">{{ formatAiText(weeklyReport.weeklySummary) || '暂无总结' }}</p></div></div><div class="list-row"><div><h3>主要问题</h3><p class="record-ai-text">{{ formatAiText(weeklyReport.mainProblems) || '暂无明确问题' }}</p></div></div><div class="list-row"><div><h3>下周建议</h3><p class="record-ai-text">{{ formatAiText(weeklyReport.nextWeekSuggestions) || '暂无建议' }}</p></div></div><div class="list-row"><div><h3>行动清单</h3><ul v-if="weeklyReport.suggestedActions?.length" class="record-ai-text mb-0 ps-3"><li v-for="action in weeklyReport.suggestedActions" :key="action">{{ action }}</li></ul><p v-else>暂无行动清单</p></div><span class="badge status-doing">{{ weeklyReport.generationSourceLabel || 'DeepSeek' }}</span></div></template><div v-else class="list-row"><p>点击按钮生成本周学习报告。</p></div></div>
     </section>
     <section class="content-card"><div class="card-title-row"><h2>记录列表</h2><button class="btn btn-outline-primary btn-sm" :disabled="busy || aiBusy || weeklyBusy" @click="run(refreshRecords)">刷新</button></div>
       <div class="row g-2 mb-3">

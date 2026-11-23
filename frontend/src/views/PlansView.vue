@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import PlanForm from '../components/PlanForm.vue';
 import PlanHierarchy from '../components/PlanHierarchy.vue';
 import { statusClass } from '../plan.js';
+import { formatAiText } from '../workflow.js';
 import { buildPlanTree } from '../planTree.js';
 const props = defineProps({ api: { type: Function, required: true } });
 const emit = defineEmits(['session-expired', 'busy-change', 'navigate']);
@@ -118,7 +119,7 @@ onMounted(() => perform(loadPlans));
       <section class="content-card plan-detail-tree-panel mb-4"><div class="plan-detail-section-heading"><div><span class="soft-label">01 · 目标路径</span><h2>从目标到每一次学习</h2><p>点击学习任务，在右侧展开对应记录；窄屏可左右滑动。</p></div><div class="plan-detail-tree-actions"><span class="plan-detail-tree-count">1 个目标 · {{ overview.tasks.length }} 项任务 · {{ overview.recordCount }} 条记录</span><button class="btn btn-outline-primary btn-sm" @click="emit('navigate', 'records')">查看全部记录 →</button></div></div><div class="plan-detail-tree-viewport"><PlanHierarchy :plan="selected" :tasks="tasks" :records="records" /></div></section>
       <section class="content-card plan-detail-review"><div class="plan-detail-section-heading"><div><span class="soft-label">02 · 目标复盘</span><h2>用学习记录检验目标进展</h2><p>综合该计划下的学习内容、问题和任务完成情况。</p></div><button class="btn btn-primary" :disabled="busy || reviewBusy || records.length < 2" @click="generateReview">{{ reviewBusy ? '正在生成…' : review ? '重新生成复盘' : '生成 AI 复盘' }}</button></div>
         <p v-if="records.length < 2" class="plan-detail-review-hint">再添加 {{ 2 - records.length }} 条学习记录，就可以生成目标复盘。</p><p v-if="reviewError" class="alert alert-danger" role="alert">{{ reviewError }}</p><p v-if="reviewBusy" class="muted-text" role="status">正在分析该目标的学习记录，请稍候…</p>
-        <div v-if="review" class="plan-detail-review-grid"><div><span>01 / 目标进展</span><p>{{ review.summary }}</p></div><div><span>02 / 主要问题</span><p>{{ review.problems }}</p></div><div><span>03 / 下一步行动</span><ol><li v-for="action in review.actions || []" :key="action">{{ action }}</li></ol></div></div>
+        <div v-if="review" class="plan-detail-review-grid"><div><span>01 / 目标进展</span><p>{{ formatAiText(review.summary) }}</p></div><div><span>02 / 主要问题</span><p>{{ formatAiText(review.problems) }}</p></div><div><span>03 / 下一步行动</span><ol><li v-for="action in review.actions || []" :key="action">{{ action }}</li></ol></div></div>
         <p v-if="review" class="plan-detail-review-source">依据 {{ review.recordCount }} 条记录 · {{ review.startDate || '未设置日期' }} 至 {{ review.endDate || '未设置日期' }} · {{ review.generationSourceLabel }}</p>
         <div v-else-if="!reviewBusy && records.length >= 2 && !reviewError" class="plan-detail-review-empty">已经有 {{ records.length }} 条记录。点击“生成 AI 复盘”查看目标进展与下一步行动。</div>
       </section>
